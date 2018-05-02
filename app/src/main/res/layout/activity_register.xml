@@ -98,6 +98,7 @@
                 android:layout_height="match_parent"
                 android:layout_alignParentLeft="true"
                 android:id="@+id/radioGroup"
+                android:checkedButton="@id/radioButtonFemale"
                 android:orientation="horizontal">
 
                 <RadioButton

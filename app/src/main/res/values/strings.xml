@@ -17,4 +17,9 @@
     <string name="RegisterTakePicture">Before register you will have to take a picture of yourself!</string>
     <string name="RegisterNameHint">Enter your full name</string>
     <string name="RegisterAlreadyMember">Already a member!</string>
+
+    <!--Strings used for CustomPagerAdapter-->
+    <string name="Feed">Feed</string>
+    <string name="Gallery">Gallery</string>
+    <string name="Camera">Camera</string>
 </resources>

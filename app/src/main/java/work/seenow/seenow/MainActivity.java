@@ -1,14 +1,14 @@
 package work.seenow.seenow;
 
+import work.seenow.seenow.Utils.PagerAdapter;
 import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.SessionManager;
 
 import java.util.HashMap;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.support.v4.view.ViewPager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -26,10 +26,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        txtName = (TextView) findViewById(R.id.name);
-        txtEmail = (TextView) findViewById(R.id.email);
-        btnLogout = (Button) findViewById(R.id.btnLogout);
-
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
@@ -46,18 +42,6 @@ public class MainActivity extends Activity {
         String name = user.get("name");
         String email = user.get("email");
 
-        // Displaying the user details on the screen
-        txtName.setText(name);
-        txtEmail.setText(email);
-
-        // Logout button click event
-        btnLogout.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                logoutUser();
-            }
-        });
     }
 
     /**
@@ -74,4 +58,6 @@ public class MainActivity extends Activity {
         startActivity(intent);
         finish();
     }
+
+
 }
