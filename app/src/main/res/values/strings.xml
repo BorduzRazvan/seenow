@@ -3,6 +3,7 @@
     <!--Strings used for LoginActivity-->
     <string name="LoginEmailHint">Enter your email</string>
     <string name="LoginPasswordHint">Enter your password</string>
+    <string name="RegisterPasswordHint">Confirm your password</string>
     <string name="LoginNoAccount">No account yet? Create one!</string>
     <string name="LoginButton">Login</string>
 

@@ -8,18 +8,24 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.hbb20.CountryCodePicker;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import work.seenow.seenow.Utils.AppConfig;
 import work.seenow.seenow.Utils.AppController;
@@ -28,14 +34,24 @@ import work.seenow.seenow.Utils.SessionManager;
 
 public class RegisterActivity extends Activity {
     private static final String TAG = RegisterActivity.class.getSimpleName();
+
     private Button btnRegister;
     private Button btnLinkToLogin;
     private EditText inputFullName;
     private EditText inputEmail;
     private EditText inputPassword;
+    private EditText confirmPassword;
+    private EditText inputDate;
+    private CountryCodePicker countryCodePicker;
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
+    private String isPictureTaken;
+    private RadioGroup selectedGender;
+
+    private static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
+    private static final Pattern VALID_PASSWORD_REGEX = Pattern.compile("^(?=.*[A-Z])(?=.*[!@#$&*])(?=.*[0-9]).{8,}$");
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +63,10 @@ public class RegisterActivity extends Activity {
         inputPassword = (EditText) findViewById(R.id.loginPassword);
         btnRegister = (Button) findViewById(R.id.registerButton);
         btnLinkToLogin = (Button) findViewById(R.id.registerAlreadyMember);
+        inputDate = (EditText) findViewById(R.id.registerBirthday);
+        confirmPassword = (EditText) findViewById(R.id.registerPassword);
+        countryCodePicker = (CountryCodePicker) findViewById(R.id.CountryPicker);
+        selectedGender = (RadioGroup) findViewById(R.id.radioGroup);
 
         // Progress dialog
         pDialog = new ProgressDialog(this);
@@ -73,10 +93,35 @@ public class RegisterActivity extends Activity {
                 String name = inputFullName.getText().toString().trim();
                 String email = inputEmail.getText().toString().trim();
                 String password = inputPassword.getText().toString().trim();
+                String conf_password = confirmPassword.getText().toString().trim();
+                String date = inputDate.getText().toString().trim();
+                String country = countryCodePicker.getSelectedCountryName();
+                RadioButton genderSelector = (RadioButton) findViewById(selectedGender.getCheckedRadioButtonId());
+                String gender = genderSelector.getText().toString();
+                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty() && !conf_password.isEmpty() && !date.isEmpty() && !country.isEmpty()) {
+                    if (!isEmailValid(email)) {
+                        Toast.makeText(getApplicationContext(),
+                                "Wrong email adress!", Toast.LENGTH_LONG)
+                                .show();
 
-                if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty()) {
-                    registerUser(name, email, password);
-                } else {
+                    } else if (!password.equals(conf_password)) {
+                        Toast.makeText(getApplicationContext(),
+                                "The passwords doesn't match!", Toast.LENGTH_LONG)
+                                .show();
+
+                    }else if(!isPasswordStrong(password)) {
+                        Toast.makeText(getApplicationContext(),
+                                "The password should be at least 8 characters, 1 uppercase letter, 1 special character", Toast.LENGTH_LONG)
+                                .show();
+                    }else if (!isValidDate(date)) {
+                        Toast.makeText(getApplicationContext(),
+                                "Date must respect pattern: dd.MM.yyyy", Toast.LENGTH_LONG)
+                                .show();
+                    } else {
+                        registerUser(name, email, password, date, gender, country);
+
+                    }
+                }else {
                     Toast.makeText(getApplicationContext(),
                             "Please enter your details!", Toast.LENGTH_LONG)
                             .show();
@@ -96,13 +141,12 @@ public class RegisterActivity extends Activity {
         });
 
     }
-
     /**
      * Function to store user in MySQL database will post params(tag, name,
-     * email, password) to register url
+     * email, password, birthday, gender and country) to register url
      * */
     private void registerUser(final String name, final String email,
-                              final String password) {
+                              final String password, final String birthday, final String gender, final String country) {
         // Tag used to cancel the request
         String tag_string_req = "req_register";
 
@@ -116,7 +160,6 @@ public class RegisterActivity extends Activity {
             public void onResponse(String response) {
                 Log.d(TAG, "Register Response: " + response.toString());
                 hideDialog();
-
                 try {
                     JSONObject jObj = new JSONObject(response);
                     boolean error = jObj.getBoolean("error");
@@ -192,4 +235,49 @@ public class RegisterActivity extends Activity {
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
+
+    /**
+     * method is used for checking valid email id format.
+     *
+     * @param email
+     * @return boolean true for valid false for invalid
+     */
+    private static boolean isEmailValid(String email) {
+        return VALID_EMAIL_ADDRESS_REGEX .matcher(email).matches();
+    }
+
+    /**
+     * method is used for checking if password is strong enough
+     *
+     * @param password
+     * @return boolean true for strong enough
+     * Regex explanation:
+     *      ^                         Start anchor
+     *      (?=.*[A-Z])               Ensure string at least 1 uppercase letter.
+     *      (?=.*[!@#$&*])            Ensure string has one special case letter.
+     *      (?=.*[0-9])               Ensure string has at least 1 digit.
+     *      .{8}                      Ensure string is of length 8.
+     $                                End anchor.
+     */
+    private static boolean isPasswordStrong(String password) {
+        return VALID_PASSWORD_REGEX .matcher(password).matches();
+    }
+
+    /**
+     * method is used for checking valid date format.
+     *
+     * @param inDate
+     * @return boolean true for valid false for invalid
+     */
+    private static boolean isValidDate(String inDate) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        dateFormat.setLenient(false);
+        try {
+            dateFormat.parse(inDate.trim());
+        } catch (ParseException pe) {
+            return false;
+        }
+        return true;
+    }
+
 }

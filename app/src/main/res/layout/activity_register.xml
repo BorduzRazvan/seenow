@@ -68,7 +68,17 @@
                 tools:layout_editor_absoluteY="285dp" />
 
             <EditText
-                android:id="@+id/editText"
+                android:id="@+id/registerPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:ems="10"
+                android:hint="@string/RegisterPasswordHint"
+                android:textColor="@android:color/background_light"
+                android:inputType="textPassword" />
+
+            <EditText
+                android:id="@+id/registerBirthday"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
@@ -87,6 +97,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignParentLeft="true"
+                android:id="@+id/radioGroup"
                 android:orientation="horizontal">
 
                 <RadioButton
