@@ -6,20 +6,14 @@ import work.seenow.seenow.Utils.SessionManager;
 import java.util.HashMap;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Button;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
-
-    private TextView txtName;
-    private TextView txtEmail;
-    private Button btnLogout;
-
     private SQLiteHandler db;
     private SessionManager session;
     private FragmentPagerAdapter adapterViewPager;
@@ -27,9 +21,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ViewPager vpPager = (ViewPager) findViewById(R.id.vpPager);
+        ViewPager vpPager = (ViewPager) findViewById(R.id.viewpager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         vpPager.setAdapter(adapterViewPager);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+
+        tabLayout.setupWithViewPager(vpPager);
+        tabLayout.getTabAt(2).setIcon(R.drawable.ic_camera_normal);
+
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
 
@@ -37,15 +36,11 @@ public class MainActivity extends AppCompatActivity {
         session = new SessionManager(getApplicationContext());
 
         if (!session.isLoggedIn()) {
-            logoutUser();
+//            logoutUser();
         }
 
         // Fetching user details from sqlite
         HashMap<String, String> user = db.getUserDetails();
-
-        String name = user.get("name");
-        String email = user.get("email");
-
     }
 
     /**
@@ -96,9 +91,12 @@ public class MainActivity extends AppCompatActivity {
         // Returns the page title for the top indicator
         @Override
         public CharSequence getPageTitle(int position) {
-            return "Page " + position;
+            switch (position) {
+                case 0: return "Feed";
+                case 1: return "Gallery";
+            }
+            return "";
         }
-
     }
 
 }

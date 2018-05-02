@@ -8,4 +8,5 @@
     <color name="colorGradientStop">#C06C84</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorRegister">#ff0000</color>
+    <color name="tabLayoutBackground">#E84A5F</color>
 </resources>
