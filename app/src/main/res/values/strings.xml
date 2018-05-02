@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Seenow</string>
+    <!--Strings used for LoginActivity-->
+    <string name="LoginEmailHint">Enter your email</string>
+    <string name="LoginPasswordHint">Enter your password</string>
+    <string name="LoginNoAccount">No account yet? Create one!</string>
+    <string name="LoginButton">Login</string>
+
+    <!--Strings used for RegisterActivity-->
+    <string name="RegisterBirthday">Enter your birthday</string>
+    <string name="RegisterGenderFemale">Female</string>
+    <string name="RegisterGenderMale">Male</string>
+    <string name="RegisterCountryPicker">Please select your country</string>
+    <string name="RegisterGenderSelect">Select your gender</string>
+    <string name="RegisterButton">Submit</string>
+    <string name="RegisterTakePicture">Before register you will have to take a picture of yourself!</string>
+    <string name="RegisterNameHint">Enter your full name</string>
+    <string name="RegisterAlreadyMember">Already a member!</string>
+</resources>
