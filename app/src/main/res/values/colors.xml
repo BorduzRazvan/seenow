@@ -8,5 +8,13 @@
     <color name="colorGradientStop">#C06C84</color>
     <color name="colorWhite">#ffffff</color>
     <color name="colorRegister">#ff0000</color>
-    <color name="tabLayoutBackground">#E84A5F</color>
+    <color name="tabLayoutBackground">#3F51B5</color>
+
+    <!--Feed Colors-->
+    <color name="white">#ffffff</color>
+    <color name="feed_bg">#d3d6db</color>
+    <color name="feed_item_bg">#ffffff</color>
+    <color name="feed_item_border">#c2c3c8</color>
+    <color name="link">#0a80d1</color>
+    <color name="timestamp">#a0a3a7</color>
 </resources>

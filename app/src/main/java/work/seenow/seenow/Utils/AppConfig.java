@@ -6,4 +6,7 @@ public class AppConfig {
 
     // Server user register url
     public static String URL_REGISTER = "http://192.168.0.102/android_login_api/register.php";
+
+    // Server feed url
+    public static String URL_FEED = "https://api.androidhive.info/feed/feed.json";
 }
