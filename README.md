@@ -36,36 +36,38 @@ create database SeenowDB
 /** Select the Database **/
 use android_api
 
-/** Creating Users Table **/
-create table users(
-   id int(11) primary key auto_increment,
-   fullname varchar(50) not null,
-   email varchar(100) not null unique,
-   encrypted_password varchar(80) not null,
-   salt varchar(10) not null,
-   created_at datetime,
-   gender varchar(1) not null,
-country varchar(30) not null,
-socialLoggedIn int(11) null
+
+
+
+ create table users (
+    id int(11) primary key auto_increment,
+    fullname varchar(50) not null,
+    email varchar(100) not null unique,
+    encrypted_password varchar(80) not null,
+    salt varchar(10) not null,
+    created_at datetime,
+    gender varchar(1) not null,
+    country varchar(30) not null,
+    socialLoggedIn int(11) null
+    );
+ 
+ 
+ 
+create table feeds (
+    id int(11) primary key auto_increment,
+    author_id int(11) not null,
+    foundUser_id int(11),
+    picture_id int(11) not null,
+    description varchar(255),
+    posted_at datetime,
+    FOREIGN KEY (author_id) REFERENCES users(id)
 );
-
-
-
-
-/** Creating Feed Table **/
-create table feeds(
-id int(11) primary key auto_increment,
-author_id int(11) not null,
-foundUser_id int(11) null,
-picture_id int(11) not null,
-   description varchar(255) null,
-posted_at datetime
-   FOREIGN KEY (authorID) REFERENCES users(id)
-);
-
-/** Creating LikedFeed *//
-create table likedFeed(
+ 
+ 
+ 
+create table likedFeed (
     id int(11) not null,
-    liked_by int(11) not null
-    PRIMARY KEY (id) REFERENCES feeds(id)
-    FOREIGN KEY ( liked_by)  REFERENCES users(id)
+    user_id int(11) not null,
+    FOREIGN KEY (id) REFERENCES feeds(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
