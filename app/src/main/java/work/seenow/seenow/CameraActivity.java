@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -24,6 +26,7 @@ import android.widget.Toast;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,7 +47,7 @@ public class CameraActivity extends Fragment {
     private Uri fileUri; // file url to store image
     private Button btnCapturePicture, btnUploadPicture;
     private ImageView imagePreview;
-
+    private ExifInterface exifObject;
     // newInstance constructor for creating fragment with arguments
     public static CameraActivity newInstance(int page, String title) {
         CameraActivity fragmentFirst = new CameraActivity();
@@ -139,16 +142,43 @@ public class CameraActivity extends Fragment {
         // changes
         outState.putParcelable("file_uri", fileUri);
 
+//        // Show the image into imageview to preview it
+//        File imgFile = new  File(fileUri.getPath());
+//
+//        if(imgFile.isFile()){
+//
+//            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+//            Log.d(TAG, "Aici");
+//            imagePreview.setImageBitmap(myBitmap);
+//            imagePreview.setVisibility(View.VISIBLE);
+//        }
+        Log.d(TAG,"fileUri.path:"+fileUri.getPath());
+    }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
         // Show the image into imageview to preview it
-        File imgFile = new  File(fileUri.getPath());
+        if (fileUri != null) {
+            File imgFile = new File(fileUri.getPath());
 
-        if(imgFile.exists()){
+            if (imgFile.isFile()) {
 
-            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                try {
+                    exifObject = new ExifInterface(fileUri.getPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-            imagePreview.setImageBitmap(myBitmap);
-            imagePreview.setVisibility(View.VISIBLE);
+
+                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                int orientation = exifObject.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+                Bitmap imageRotate = rotateBitmap(myBitmap,orientation);
+                Log.d(TAG, "Aici");
+                imagePreview.setImageBitmap(imageRotate);
+                imagePreview.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -225,4 +255,50 @@ public class CameraActivity extends Fragment {
             return true;
         }
     }
+
+    public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+                return bitmap;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            if (bitmap != null && !bitmap.isRecycled()) {
+              //  bitmap.recycle();
+            }
+            return bmRotated;
+        }
+        catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }
