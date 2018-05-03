@@ -22,4 +22,11 @@
     <string name="Feed">Feed</string>
     <string name="Gallery">Gallery</string>
     <string name="Camera">Camera</string>
+
+
+    <!--Strings used for CameraActivity-->
+    <string name="ChoosePicture">Choose an existing picture</string>
+    <string name="Or">OR</string>
+    <string name="TakePicture">Take a new picture</string>
+
 </resources>
