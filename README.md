@@ -34,7 +34,7 @@ _____
 /** Creating Database **/
 create database SeenowDB  
 /** Select the Database **/
-use android_api
+use SeenowDB
 
 
 
