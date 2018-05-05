@@ -10,9 +10,12 @@ public class AppConfig {
     // Server feed url
     public static String URL_FEED = "https://api.androidhive.info/feed/feed.json";
 
-    // Server upload url
-    public static final String FILE_UPLOAD_URL = "http://192.168.0.104/AndroidFileUpload/fileUpload.php";
 
     // Place for SeeNow Picture
     public static final String IMAGE_DIRECTORY_NAME = "SeenowPictures";
+
+    // Server upload url
+    private static final String ROOT_URL = "http://192.168.0.102/upload.php?apicall=";
+    public static final String UPLOAD_URL = ROOT_URL + "uploadpic";
+    public static final String GET_PICS_URL = ROOT_URL + "getpics";
 }

@@ -1,6 +1,7 @@
 package work.seenow.seenow;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -25,29 +26,51 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.Volley;
+
+
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_objdetect;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import work.seenow.seenow.Utils.AppConfig;
+import work.seenow.seenow.Utils.HaarFaceDetector;
+import work.seenow.seenow.Utils.VolleyMultipartRequest;
+
+import static org.bytedeco.javacpp.opencv_imgcodecs.cvLoadImage;
+import static work.seenow.seenow.MainActivity.PACKAGE_NAME;
+
 
 public class CameraActivity extends Fragment {
-
     // LogCat tag
     private static final String TAG = CameraActivity.class.getSimpleName();
-
-
     // Camera activity request codes
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
-    public static final int MEDIA_TYPE_IMAGE = 1;
-
     private Uri fileUri; // file url to store image
-    private Button btnCapturePicture, btnUploadPicture;
+    private Bitmap forUpload; // Bitmap for Upload
+    private Button btnCapturePicture, btnUploadPicture, uploadButton;
     private ImageView imagePreview;
     private ExifInterface exifObject;
+    private opencv_core.IplImage image;
+
+
     // newInstance constructor for creating fragment with arguments
     public static CameraActivity newInstance(int page, String title) {
         CameraActivity fragmentFirst = new CameraActivity();
@@ -72,7 +95,19 @@ public class CameraActivity extends Fragment {
 
         btnCapturePicture = (Button) view.findViewById(R.id.NewPictureButton);
         btnUploadPicture = (Button) view.findViewById(R.id.ExistingPictureButton);
+        uploadButton = (Button) view.findViewById(R.id.buttonUpload);
         imagePreview = (ImageView) view.findViewById(R.id.ImageView);
+
+        /** open image chooser */
+        btnUploadPicture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, 100);
+            }
+        });
+        Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(i, 100);
 
         /**         * Capture image button click event */
         btnCapturePicture.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +121,12 @@ public class CameraActivity extends Fragment {
             }
         });
 
+        uploadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                uploadBitmap(forUpload);
+            }
+        });
 
 
         // Checking camera availability
@@ -139,20 +180,7 @@ public class CameraActivity extends Fragment {
         super.onSaveInstanceState(outState);
 
         // save file url in bundle as it will be null on screen orientation
-        // changes
         outState.putParcelable("file_uri", fileUri);
-
-//        // Show the image into imageview to preview it
-//        File imgFile = new  File(fileUri.getPath());
-//
-//        if(imgFile.isFile()){
-//
-//            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-//            Log.d(TAG, "Aici");
-//            imagePreview.setImageBitmap(myBitmap);
-//            imagePreview.setVisibility(View.VISIBLE);
-//        }
-        Log.d(TAG,"fileUri.path:"+fileUri.getPath());
     }
 
 
@@ -174,10 +202,13 @@ public class CameraActivity extends Fragment {
 
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 int orientation = exifObject.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
-                Bitmap imageRotate = rotateBitmap(myBitmap,orientation);
+                forUpload = rotateBitmap(myBitmap,orientation);
                 Log.d(TAG, "Aici");
-                imagePreview.setImageBitmap(imageRotate);
+                imagePreview.setImageBitmap(forUpload);
                 imagePreview.setVisibility(View.VISIBLE);
+                /** Make the upload button visible */
+                getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
+                isFace();
             }
         }
     }
@@ -191,6 +222,28 @@ public class CameraActivity extends Fragment {
         }
     }
 
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "Aici");
+        if (requestCode == 100 && resultCode == Activity.RESULT_OK && data != null) {
+
+            //getting the image Uri
+            fileUri = data.getData();
+            try {
+                forUpload = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), fileUri);
+                Log.d(TAG, "AICI si uri: " + fileUri.getPath());
+                imagePreview.setImageBitmap(forUpload);
+                imagePreview.setVisibility(View.VISIBLE);
+                /** Make the upload button visible */
+                getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
+                isFace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     /**
      * Creating file uri to store image/video
@@ -229,6 +282,7 @@ public class CameraActivity extends Fragment {
     }
 
 
+    /** Check for storage permission */
     public  boolean isStoragePermissionGranted() {
 
         if (Build.VERSION.SDK_INT >= 23) {
@@ -256,6 +310,7 @@ public class CameraActivity extends Fragment {
         }
     }
 
+    /** Before the review of image rotate it */
     public static Bitmap rotateBitmap(Bitmap bitmap, int orientation) {
         Matrix matrix = new Matrix();
         switch (orientation) {
@@ -300,5 +355,89 @@ public class CameraActivity extends Fragment {
             return null;
         }
     }
+
+
+    private boolean isFace() {
+        image = cvLoadImage(fileUri.getPath());
+        HaarFaceDetector faceDetector = new HaarFaceDetector();
+        if(faceDetector.detectFace(image) != 0){
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
+    private void uploadBitmap(final Bitmap bitmap) {
+
+        //getting the tag from the edittext
+        final String author="Author";
+
+        //our custom volley request
+        VolleyMultipartRequest volleyMultipartRequest = new VolleyMultipartRequest(Request.Method.POST, AppConfig.UPLOAD_URL,
+                new Response.Listener<NetworkResponse>() {
+                    @Override
+                    public void onResponse(NetworkResponse response) {
+                        try {
+                            JSONObject obj = new JSONObject(new String(response.data));
+                            Toast.makeText(getActivity().getApplicationContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getActivity().getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }) {
+
+            /*
+             * If you want to add more parameters with the image
+             * you can do it here
+             * here we have only one parameter with the image
+             * which is tags
+             * */
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("tags", author);
+                return params;
+            }
+
+            /*
+             * Here we are passing image by renaming it with a unique name
+             * */
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                long imagename = System.currentTimeMillis();
+                params.put("pic", new DataPart(imagename + ".png", getFileDataFromDrawable(bitmap)));
+                return params;
+            }
+        };
+
+        //adding the request to volley
+        Volley.newRequestQueue(getContext()).add(volleyMultipartRequest);
+    }
+
+    /*
+     * The method is taking Bitmap as an argument
+     * then it will return the byte[] array for the given bitmap
+     * and we will send this array to the server
+     * here we are using PNG Compression with 80% quality
+     * you can give quality between 0 to 100
+     * 0 means worse quality
+     * 100 means best quality
+     * */
+    public byte[] getFileDataFromDrawable(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
+
 
 }

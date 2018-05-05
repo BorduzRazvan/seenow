@@ -14,12 +14,15 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
+    public static String PACKAGE_NAME;
+
     private SQLiteHandler db;
     private SessionManager session;
     private FragmentPagerAdapter adapterViewPager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        PACKAGE_NAME = getApplicationContext().getPackageName();
         setContentView(R.layout.activity_main);
         ViewPager vpPager = (ViewPager) findViewById(R.id.viewpager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
