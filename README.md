@@ -34,7 +34,7 @@ _____
 /** Creating Database **/
 create database SeenowDB  
 /** Select the Database **/
-use android_api
+use SeenowDB
 
 
 
@@ -46,6 +46,7 @@ use android_api
     encrypted_password varchar(80) not null,
     salt varchar(10) not null,
     created_at datetime,
+    birthday date not null,
     gender varchar(1) not null,
     country varchar(30) not null,
     socialLoggedIn int(11) null
