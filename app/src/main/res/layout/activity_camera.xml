@@ -46,6 +46,16 @@
             android:layout_height="wrap_content"
             android:text="@string/Upload"
             android:visibility="gone"/>
+
+        <EditText
+            android:id="@+id/predictLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text=""
+            android:hint="@string/PredictHint"
+            android:visibility="gone"/>
     </LinearLayout>
 
 

@@ -29,4 +29,5 @@
     <string name="Or">OR</string>
     <string name="TakePicture">Take a new picture</string>
     <string name="Upload">Upload</string>
+    <string name="PredictHint">If you know the person already write the name</string>
 </resources>

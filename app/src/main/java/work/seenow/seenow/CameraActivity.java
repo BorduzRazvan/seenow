@@ -2,6 +2,7 @@ package work.seenow.seenow;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -22,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -34,14 +36,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.Volley;
 
 
-import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_objdetect;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
@@ -51,12 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import work.seenow.seenow.Utils.AppConfig;
-import work.seenow.seenow.Utils.HaarFaceDetector;
 import work.seenow.seenow.Utils.VolleyMultipartRequest;
-
-import static org.bytedeco.javacpp.opencv_imgcodecs.cvLoadImage;
-import static work.seenow.seenow.MainActivity.PACKAGE_NAME;
-
 
 public class CameraActivity extends Fragment {
     // LogCat tag
@@ -66,10 +60,9 @@ public class CameraActivity extends Fragment {
     private Uri fileUri; // file url to store image
     private Bitmap forUpload; // Bitmap for Upload
     private Button btnCapturePicture, btnUploadPicture, uploadButton;
+    private EditText predictLabel;
     private ImageView imagePreview;
     private ExifInterface exifObject;
-    private opencv_core.IplImage image;
-
 
     // newInstance constructor for creating fragment with arguments
     public static CameraActivity newInstance(int page, String title) {
@@ -96,6 +89,8 @@ public class CameraActivity extends Fragment {
         btnCapturePicture = (Button) view.findViewById(R.id.NewPictureButton);
         btnUploadPicture = (Button) view.findViewById(R.id.ExistingPictureButton);
         uploadButton = (Button) view.findViewById(R.id.buttonUpload);
+
+        predictLabel = (EditText) view.findViewById(R.id.predictLabel);
         imagePreview = (ImageView) view.findViewById(R.id.ImageView);
 
         /** open image chooser */
@@ -208,7 +203,7 @@ public class CameraActivity extends Fragment {
                 imagePreview.setVisibility(View.VISIBLE);
                 /** Make the upload button visible */
                 getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
-                isFace();
+                predictLabel.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -238,7 +233,7 @@ public class CameraActivity extends Fragment {
                 imagePreview.setVisibility(View.VISIBLE);
                 /** Make the upload button visible */
                 getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
-                isFace();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -356,20 +351,6 @@ public class CameraActivity extends Fragment {
         }
     }
 
-
-    private boolean isFace() {
-        image = cvLoadImage(fileUri.getPath());
-        HaarFaceDetector faceDetector = new HaarFaceDetector();
-        if(faceDetector.detectFace(image) != 0){
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-
     private void uploadBitmap(final Bitmap bitmap) {
 
         //getting the tag from the edittext
@@ -404,7 +385,12 @@ public class CameraActivity extends Fragment {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                params.put("tags", author);
+                params.put("author", author);
+                String predictedLabel_string = predictLabel.getText().toString();
+                if(!predictedLabel_string.isEmpty()) {
+                    params.put("predictedLabel", predictLabel.getText().toString());
+                }
+
                 return params;
             }
 
