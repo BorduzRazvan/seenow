@@ -87,6 +87,10 @@ create table images (
 
 
 
-How to select from feeds: use SeenowDB;
+/** Get all the feeds in what user with id = '1' is involved */
+SELECT * FROM feeds as f LEFT JOIN users as u on  ((f.author_id = u.id or f.foundUser_id = u.id) and u.id != '1') WHERE (f.author_id = '1' or f.foundUser_id = '1');
 
-select f.author_id as feed_a_id, f.founduser_id as feed_found_user_id, u.id as user_id from feeds as f LEFT JOIN users as u on f.author_id = u.id WHERE f.author_id = 2;
+
+/** Get all users that user =1 has a relation */
+
+SELECT u.* FROM usersRelations as ur LEFT JOIN users as u on (ur.user2_id = u.id) where ur.user1_id = '1;' 
