@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         session = new SessionManager(getApplicationContext());
 
         if (!session.isLoggedIn()) {
-//            logoutUser();
+            logoutUser();
         }
 
         // Fetching user details from sqlite
