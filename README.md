@@ -45,11 +45,14 @@ use SeenowDB
     email varchar(100) not null unique,
     encrypted_password varchar(80) not null,
     salt varchar(10) not null,
+    
     created_at datetime,
     birthday date not null,
     gender varchar(1) not null,
     country varchar(30) not null,
-    socialLoggedIn int(11) null
+    socialLoggedIn int(11) null,
+    profilePic int(11) not null,
+    FOREIGN KEY (profilePic) REFERENCES pictures(id)
     );
  
  
@@ -67,8 +70,16 @@ create table feeds (
  
  
 create table likedFeed (
-    id int(11) not null,
+    id int(11) primary key auto_increment,
     user_id int(11) not null,
     FOREIGN KEY (id) REFERENCES feeds(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
+create table images ( 
+   id int(11) primary key auto_increment,
+   name varchar(500) not null,
+   authorID int(11) not null,
+   FOREIGN key (authorID) REFERENCES users(id)
 );
