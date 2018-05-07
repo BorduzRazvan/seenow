@@ -92,5 +92,11 @@ SELECT * FROM feeds as f LEFT JOIN users as u on  ((f.author_id = u.id or f.foun
 
 
 /** Get all users that user =1 has a relation */
+SELECT u.* FROM usersRelations as ur LEFT JOIN users as u on (ur.user2_id = u.id) where ur.user1_id = '1'; 
 
-SELECT u.* FROM usersRelations as ur LEFT JOIN users as u on (ur.user2_id = u.id) where ur.user1_id = '1;' 
+
+/** Get all feeds from friends of user1 */
+select f.*, u.*, ur.* FROM usersRelations as ur 
+    LEFT JOIN feeds as f on (f.foundUser_id = ur.user2_id or f.author_id = ur.user2_id) 
+    LEFT JOIN users as u on (u.id = ur.user2_id and (u.id = f.foundUser_id or u.id = f.author_id )) 
+    WHERE ur.user1_id = '2';
