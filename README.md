@@ -83,3 +83,10 @@ create table images (
    authorID int(11) not null,
    FOREIGN key (authorID) REFERENCES users(id)
 );
+
+
+
+
+How to select from feeds: use SeenowDB;
+
+select f.author_id as feed_a_id, f.founduser_id as feed_found_user_id, u.id as user_id from feeds as f LEFT JOIN users as u on f.author_id = u.id WHERE f.author_id = 2;
