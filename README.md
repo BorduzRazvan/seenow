@@ -27,6 +27,11 @@ https://stackoverflow.com/questions/6495898/findviewbyid-in-fragment
 https://stackoverflow.com/questions/28259138/how-to-use-listview-in-android-fragment
 
 
+
+
+https://www.androidhive.info/android-databinding-in-recyclerview-profile-screen/
+
+
 MySql
 _____
 
