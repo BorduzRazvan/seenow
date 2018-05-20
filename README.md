@@ -27,6 +27,11 @@ https://stackoverflow.com/questions/6495898/findviewbyid-in-fragment
 https://stackoverflow.com/questions/28259138/how-to-use-listview-in-android-fragment
 
 
+
+
+https://www.androidhive.info/android-databinding-in-recyclerview-profile-screen/
+
+
 MySql
 _____
 
@@ -87,6 +92,16 @@ create table images (
 
 
 
-How to select from feeds: use SeenowDB;
+/** Get all the feeds in what user with id = '1' is involved */
+SELECT * FROM feeds as f LEFT JOIN users as u on  ((f.author_id = u.id or f.foundUser_id = u.id) and u.id != '1') WHERE (f.author_id = '1' or f.foundUser_id = '1');
 
-select f.author_id as feed_a_id, f.founduser_id as feed_found_user_id, u.id as user_id from feeds as f LEFT JOIN users as u on f.author_id = u.id WHERE f.author_id = 2;
+
+/** Get all users that user =1 has a relation */
+SELECT u.* FROM usersRelations as ur LEFT JOIN users as u on (ur.user2_id = u.id) where ur.user1_id = '1'; 
+
+
+/** Get all feeds from friends of user1 */
+select f.*, u.*, ur.* FROM usersRelations as ur 
+    LEFT JOIN feeds as f on (f.foundUser_id = ur.user2_id or f.author_id = ur.user2_id) 
+    LEFT JOIN users as u on (u.id = ur.user2_id and (u.id = f.foundUser_id or u.id = f.author_id )) 
+    WHERE ur.user1_id = '2';

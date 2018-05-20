@@ -1,0 +1,57 @@
+create table images ( 
+    id int(11) primary key auto_increment, 
+    name varchar(500) not null, 
+    authorID int(11) not null, 
+    FOREIGN key (authorID) REFERENCES users(id) );
+  
+    
+create table users ( 
+    id int(11) primary key auto_increment, 
+    fullname varchar(50) not null, 
+    email varchar(100) not null unique, 
+    encrypted_password varchar(80) not null, 
+    salt varchar(10) not null,
+    created_at datetime,
+    birthday date not null,
+    gender varchar(1) not null,
+    country varchar(30) not null,
+    socialLoggedIn int(11) null,
+    profilePic int(11),
+    FOREIGN KEY (profilePic) REFERENCES images(id)
+);    
+
+create table feeds ( 
+    id int(11) primary key auto_increment, 
+    author_id int(11) not null, 
+    foundUser_id int(11), 
+    picture_id int(11) not null, 
+    description varchar(255),
+    posted_at datetime, FOREIGN KEY (author_id) REFERENCES users(id)
+);
+
+create table likedFeed ( 
+    id int(11) primary key auto_increment, 
+    user_id int(11) not null, 
+    FOREIGN KEY (id) REFERENCES feeds(id), 
+    FOREIGN KEY (user_id) REFERENCES users(id) 
+);
+
+show tables;
+
+insert into users(fullname, email, encrypted_password, salt, created_at, birthday, gender, country) VALUES ('Razvan','Razvan@mail.com', 'abc','abc',NOW(), '1995-12-14', 'm', 'Romania');
+insert into users(fullname, email, encrypted_password, salt, created_at, birthday, gender, country) VALUES ('Razvan2','Razvan2@mail.com', 'abc','abc',NOW(), '1995-12-14', 'm', 'Romania');
+insert into users(fullname, email, encrypted_password, salt, created_at, birthday, gender, country) VALUES ('Razvan3','Razvan3@mail.com', 'abc','abc',NOW(), '1995-12-14', 'm', 'Romania');
+insert into users(fullname, email, encrypted_password, salt, created_at, birthday, gender, country) VALUES ('Razvan4','Razvan4@mail.com', 'abc','abc',NOW(), '1995-12-14', 'm', 'Romania');
+select * from users;
+
+
+insert into images(name, authorID) VALUES ('pic.jpg',1);
+select * from images;
+
+insert into feeds(author_id, foundUser_id, picture_id, description, posted_at) VALUES (1,2,1,'Hello World', NOW());
+insert into feeds(author_id, foundUser_id, picture_id, description, posted_at) VALUES (1,3,1,'Hello World', NOW());
+insert into feeds(author_id, foundUser_id, picture_id, description, posted_at) VALUES (4,1,1,'Hello World', NOW());
+select * from feeds;
+
+
+SELECT * FROM feeds, users WHERE (feeds.author_id = '1' or feeds.foundUser_id = '1') AND (users.id != '1');
