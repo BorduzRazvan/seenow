@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+<group android:checkableBehavior="single">
+    <item
+        android:id="@+id/nav_newPost"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="@string/Newpost" />
+    <item
+        android:id="@+id/nav_MyProfile"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="@string/profile" />
+    <item
+        android:id="@+id/nav_Settings"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/settings" />
+    <item
+        android:id="@+id/nav_logout"
+        android:icon="@drawable/exit"
+        android:title="@string/logout" />
+</group>
+</menu>
