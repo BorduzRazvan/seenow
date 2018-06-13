@@ -50,7 +50,7 @@ public class FeedFragment extends Fragment {
         args.putString("someTitle", title);
         fragmentFirst.setArguments(args);
         return fragmentFirst;
-    }
+}
 
     // Store instance variables based on arguments passed
     @Override

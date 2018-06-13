@@ -137,21 +137,6 @@
 
             </com.hbb20.CountryCodePicker>
 
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/RegisterTakePicture"
-                android:textColor="@android:color/background_light" />
-
-            <ImageButton
-                android:id="@+id/imageButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:src="@android:drawable/ic_menu_camera" />
-
             <Button
                 android:id="@+id/registerButton"
                 android:layout_width="match_parent"

@@ -74,16 +74,6 @@
                     android:textSize="@dimen/profile_name"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:fontFamily="sans-serif"
-                    android:letterSpacing="0.1"
-                    android:text="@{user.about}"
-                    android:textColor="@android:color/white"
-                    android:textSize="@dimen/profile_about" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -139,6 +129,30 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/PhotosAppereances"
+                        android:textSize="@dimen/profile_meta_label" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:onClick="@{handlers::onFollowersClicked}"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-condensed"
+                        android:text="@{BindingUtils.convertToSuffix(user.numberofPoints)}"
+                        android:textColor="@color/profile_meta"
+                        android:textSize="24dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/Points"
                         android:textSize="@dimen/profile_meta_label" />
 
                 </LinearLayout>

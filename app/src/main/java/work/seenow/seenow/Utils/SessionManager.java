@@ -18,6 +18,7 @@ public class SessionManager {
     // Shared preferences file name
     private static final String PREF_NAME = "SeenowLogin";
     private static final String KEY_IS_LOGGEDIN = "isLoggedIn";
+    private static final String USER = "USER";
 
     public SessionManager(Context context) {
         this._context = context;

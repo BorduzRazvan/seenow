@@ -4,6 +4,7 @@ import work.seenow.seenow.Fragments.*;
 import work.seenow.seenow.Utils.CircleTransform;
 import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.SessionManager;
+import work.seenow.seenow.Utils.User;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     public static String PACKAGE_NAME;
     private SQLiteHandler db;
     private SessionManager session;
-
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     private NavigationView navigationView;
     private DrawerLayout drawer;
@@ -47,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     // urls to load navigation header background image
     // and profile image
-    private static final String urlNavHeaderBg = "https://api.androidhive.info/images/nav-menu-header-bg.jpg";
     private static final String urlProfileImg = "https://lh3.googleusercontent.com/eCtE_G34M9ygdkmOpYvCag1vBARCmZwnVS6rS5t4JLzJ6QgQSBquM0nuTsCpLhYbKljoyS-txg";
 
     // index to identify current nav menu item
@@ -55,12 +56,13 @@ public class MainActivity extends AppCompatActivity {
 
     // tags used to attach the fragments
     private static final String TAG_HOME = "home";
-    private static final String TAG_PHOTOS = "photos";
-    private static final String TAG_MOVIES = "movies";
-    private static final String TAG_NOTIFICATIONS = "notifications";
     private static final String TAG_SETTINGS = "settings";
-    public static String CURRENT_TAG = TAG_HOME;
+    private static final String TAG_PROFILE = "profile";
+    private static final String TAG_LOGOUT = "logout";
+    private static final String TAG_NEW_POST = "new_post";
 
+    public static String CURRENT_TAG = TAG_HOME;
+    private static User user;
     // toolbar titles respected to selected nav menu item
     private String[] activityTitles;
 
@@ -72,61 +74,69 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        mHandler = new Handler();
-
-        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        navigationView = (NavigationView) findViewById(R.id.nav_view);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-
-        // Navigation view header
-        navHeader = navigationView.getHeaderView(0);
-        txtName = (TextView) navHeader.findViewById(R.id.name);
-        txtWebsite = (TextView) navHeader.findViewById(R.id.website);
-        imgNavHeaderBg = (ImageView) navHeader.findViewById(R.id.img_header_bg);
-        imgProfile = (ImageView) navHeader.findViewById(R.id.img_profile);
-
-        // load toolbar titles from string resources
-        activityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
 
-        // load nav menu header data
-        loadNavHeader();
-
-        // initializing navigation menu
-        setUpNavigationView();
-
-        if (savedInstanceState == null) {
-            navItemIndex = 0;
-            CURRENT_TAG = TAG_HOME;
-            loadHomeFragment();
-        }
-
-
-        PACKAGE_NAME = getApplicationContext().getPackageName();
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
-
+        user= db.getUserDetails();
         // session manager
         session = new SessionManager(getApplicationContext());
 
         if (!session.isLoggedIn()) {
-//            logoutUser();
-        }
+            Log.d(TAG,"SUNT AICI");
+            logoutUser();
+        } else {
 
-        // Fetching user details from sqlite
-        HashMap<String, String> user = db.getUserDetails();
-//        gotoFeed();
+            Log.d(TAG, "is loggedin");
+
+            /** User is logged in */
+
+            toolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+            mHandler = new Handler();
+
+            drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+            navigationView = (NavigationView) findViewById(R.id.nav_view);
+            fab = (FloatingActionButton) findViewById(R.id.fab);
+
+            // Navigation view header
+            navHeader = navigationView.getHeaderView(0);
+            txtName = (TextView) navHeader.findViewById(R.id.name);
+            imgNavHeaderBg = (ImageView) navHeader.findViewById(R.id.img_header_bg);
+            imgProfile = (ImageView) navHeader.findViewById(R.id.img_profile);
+
+            // load toolbar titles from string resources
+            activityTitles = getResources().getStringArray(R.array.nav_item_activity_titles);
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            });
+
+
+            // load nav menu header data
+            loadNavHeader();
+
+            // initializing navigation menu
+            setUpNavigationView();
+
+            if (savedInstanceState == null) {
+                navItemIndex = 0;
+                CURRENT_TAG = TAG_HOME;
+                loadHomeFragment();
+            }
+
+
+            PACKAGE_NAME = getApplicationContext().getPackageName();
+
+
+            // Fetching user details from sqlite
+            User user = db.getUserDetails();
+        }
     }
 
 
@@ -137,14 +147,10 @@ public class MainActivity extends AppCompatActivity {
      */
     private void loadNavHeader() {
         // name, website
-        txtName.setText("Ravi Tamada");
-        txtWebsite.setText("www.androidhive.info");
+        txtName.setText(user.getName());
 
         // loading header background image
-        Glide.with(this).load(urlNavHeaderBg)
-                .crossFade()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(imgNavHeaderBg);
+        imgNavHeaderBg.setImageResource(R.drawable.nav_menu_header_bg);
 
         // Loading profile image
         Glide.with(this).load(urlProfileImg)
@@ -221,13 +227,17 @@ public class MainActivity extends AppCompatActivity {
                 FeedFragment homeFragment = new FeedFragment();
                 return homeFragment;
             case 1:
-                // photos
-                ProfileFragment photosFragment = new ProfileFragment();
+                // new post
+                CameraFragment photosFragment = new CameraFragment();
                 return photosFragment;
             case 2:
-                // movies fragment
-                CameraFragment moviesFragment = new CameraFragment();
-                return moviesFragment;
+                // gallery
+                ProfileFragment profileFragment = new ProfileFragment();
+                return profileFragment;
+            case 3:
+                // settings
+                SettingsFragment settingsFragment = new SettingsFragment();
+                return settingsFragment;
             default:
                 return new FeedFragment();
         }
@@ -253,21 +263,24 @@ public class MainActivity extends AppCompatActivity {
                 //Check to see which item was being clicked and perform appropriate action
                 switch (menuItem.getItemId()) {
                     //Replacing the main content with ContentFragment Which is our Inbox View;
-                    case R.id.nav_newPost:
+                    case R.id.nav_Home:
                         navItemIndex = 0;
                         CURRENT_TAG = TAG_HOME;
                         break;
-                    case R.id.nav_MyProfile:
+                    case R.id.nav_NewPost:
                         navItemIndex = 1;
-                        CURRENT_TAG = TAG_PHOTOS;
+                        CURRENT_TAG = TAG_NEW_POST;
+                        break;
+                    case R.id.nav_MyProfile:
+                        navItemIndex = 2;
+                        CURRENT_TAG = TAG_PROFILE;
                         break;
                     case R.id.nav_Settings:
-                        navItemIndex = 2;
-                        CURRENT_TAG = TAG_MOVIES;
+                        navItemIndex = 3;
+                        CURRENT_TAG = TAG_SETTINGS;
                         break;
                     case R.id.nav_logout:
-                        navItemIndex = 3;
-                        CURRENT_TAG = TAG_NOTIFICATIONS;
+                        logoutUser();
                         break;
                     default:
                         navItemIndex = 0;
@@ -292,13 +305,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDrawerClosed(View drawerView) {
-                // Code here will be triggered once the drawer closes as we dont want anything to happen so we leave this blank
                 super.onDrawerClosed(drawerView);
             }
 
             @Override
             public void onDrawerOpened(View drawerView) {
-                // Code here will be triggered once the drawer open as we dont want anything to happen so we leave this blank
                 super.onDrawerOpened(drawerView);
             }
         };
@@ -392,16 +403,9 @@ public class MainActivity extends AppCompatActivity {
         session.setLogin(false);
 
         db.deleteUsers();
-
+        Log.d(TAG,"User is not logged in anymore");
         // Launching the login activity
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    private void gotoFeed() {
-        // Launching the Feed Activity
-        Intent intent = new Intent(MainActivity.this, FeedFragment.class);
         startActivity(intent);
         finish();
     }

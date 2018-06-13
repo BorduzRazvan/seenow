@@ -46,7 +46,6 @@ public class RegisterActivity extends Activity {
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
-    private String isPictureTaken;
     private RadioGroup selectedGender;
 
     private static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern.compile("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
@@ -98,6 +97,14 @@ public class RegisterActivity extends Activity {
                 String country = countryCodePicker.getSelectedCountryName();
                 RadioButton genderSelector = (RadioButton) findViewById(selectedGender.getCheckedRadioButtonId());
                 String gender = genderSelector.getText().toString();
+                if(gender.contains("Male"))
+                {
+                    gender = "m";
+                }
+                else
+                {
+                    gender = "f";
+                }
                 if (!name.isEmpty() && !email.isEmpty() && !password.isEmpty() && !conf_password.isEmpty() && !date.isEmpty() && !country.isEmpty()) {
                     if (!isEmailValid(email)) {
                         Toast.makeText(getApplicationContext(),
@@ -115,7 +122,7 @@ public class RegisterActivity extends Activity {
                                 .show();
                     }else if (!isValidDate(date)) {
                         Toast.makeText(getApplicationContext(),
-                                "Date must respect pattern: dd.MM.yyyy", Toast.LENGTH_LONG)
+                                "Date must respect pattern: yyyy.MM.dd", Toast.LENGTH_LONG)
                                 .show();
                     } else {
                         registerUser(name, email, password, date, gender, country);
@@ -141,10 +148,8 @@ public class RegisterActivity extends Activity {
         });
 
     }
-    /**
-     * Function to store user in MySQL database will post params(tag, name,
-     * email, password, birthday, gender and country) to register url
-     * */
+
+
     private void registerUser(final String name, final String email,
                               final String password, final String birthday, final String gender, final String country) {
         // Tag used to cancel the request
@@ -164,18 +169,6 @@ public class RegisterActivity extends Activity {
                     JSONObject jObj = new JSONObject(response);
                     boolean error = jObj.getBoolean("error");
                     if (!error) {
-                        // User successfully stored in MySQL
-                        // Now store the user in sqlite
-                        String uid = jObj.getString("uid");
-
-                        JSONObject user = jObj.getJSONObject("user");
-                        String name = user.getString("name");
-                        String email = user.getString("email");
-                        String created_at = user
-                                .getString("created_at");
-
-                        // Inserting row in users table
-                        db.addUser(name, email, uid, created_at);
 
                         Toast.makeText(getApplicationContext(), "User successfully registered. Try login now!", Toast.LENGTH_LONG).show();
 
@@ -185,11 +178,12 @@ public class RegisterActivity extends Activity {
                                 LoginActivity.class);
                         startActivity(intent);
                         finish();
-                    } else {
+                    }
+                    else {
 
                         // Error occurred in registration. Get the error
                         // message
-                        String errorMsg = jObj.getString("error_msg");
+                        String errorMsg = "Something went wrong! Please try again!";
                         Toast.makeText(getApplicationContext(),
                                 errorMsg, Toast.LENGTH_LONG).show();
                     }
@@ -213,13 +207,14 @@ public class RegisterActivity extends Activity {
             protected Map<String, String> getParams() {
                 // Posting params to register url
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("name", name);
+                params.put("fullname", name);
                 params.put("email", email);
                 params.put("password", password);
                 params.put("country", country);
                 params.put("gender", gender);
                 params.put("birthday", birthday);
-
+                params.put("profilePicId", "1");
+                params.put("useRecognizer", "n");
                 return params;
             }
 
@@ -273,7 +268,7 @@ public class RegisterActivity extends Activity {
      * @return boolean true for valid false for invalid
      */
     private static boolean isValidDate(String inDate) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd");
         dateFormat.setLenient(false);
         try {
             dateFormat.parse(inDate.trim());

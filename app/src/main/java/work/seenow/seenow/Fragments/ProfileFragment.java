@@ -22,6 +22,7 @@ import work.seenow.seenow.R;
 import work.seenow.seenow.Utils.GridSpacingItemDecoration;
 import work.seenow.seenow.Utils.PostsAdapter;
 import work.seenow.seenow.Utils.ProfileItem;
+import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.User;
 import work.seenow.seenow.databinding.*;
 
@@ -33,7 +34,6 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
     private RecyclerView recyclerView;
     private ActivityGalleryBinding binding;
     private User user;
-
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -63,7 +63,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
 
         View view;
         binding = DataBindingUtil.setContentView(getActivity(), R.layout.activity_gallery);
-
+        int targetUser = getArguments().getInt("TARGET_USER_ID");
 //        Toolbar toolbar = binding.toolbar;
 //        setSupportActionBar(toolbar);
 //        getSupportActionBar().setTitle(R.string.toolbar_profile);
@@ -71,6 +71,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
 
         handlers = new MyClickHandlers(getContext());
 
+        user = new SQLiteHandler(getActivity().getApplicationContext()).getUserDetails(targetUser);
         renderProfile();
 
         initRecyclerView();
@@ -97,18 +98,6 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
      * Renders user profile data
      */
     private void renderProfile() {
-        user = new User();
-        user.setName("David Attenborough");
-        user.setEmail("david@natgeo.com");
-        user.setProfileImage("https://api.androidhive.info/images/nature/david.jpg");
-        user.setAbout("Naturalist");
-
-        // ObservableField doesn't have setter method, instead will
-        // be called using set() method
-        user.numberofPhotosTaken.set(3400L);
-        user.numberofAppereances.set(3050890L);
-        user.numberofFriends.set(150L);
-
 
         // display user
         binding.setUser(user);
@@ -150,7 +139,6 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         public void onProfileFabClicked(View view) {
             user.setName("Sir David Attenborough");
             user.setProfileImage("https://api.androidhive.info/images/nature/david1.jpg");
-
             // updating ObservableField
             user.numberofPhotosTaken.set(5500L);
             user.numberofAppereances.set(5050890L);
