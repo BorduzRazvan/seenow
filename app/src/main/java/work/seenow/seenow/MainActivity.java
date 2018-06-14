@@ -1,6 +1,7 @@
 package work.seenow.seenow;
 
 import work.seenow.seenow.Fragments.*;
+import work.seenow.seenow.Utils.AppController;
 import work.seenow.seenow.Utils.CircleTransform;
 import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.SessionManager;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     // urls to load navigation header background image
     // and profile image
-    private static final String urlProfileImg = "https://lh3.googleusercontent.com/eCtE_G34M9ygdkmOpYvCag1vBARCmZwnVS6rS5t4JLzJ6QgQSBquM0nuTsCpLhYbKljoyS-txg";
+    private static String urlProfileImg;
 
     // index to identify current nav menu item
     public static int navItemIndex = 0;
@@ -79,13 +80,17 @@ public class MainActivity extends AppCompatActivity {
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
         user= db.getUserDetails();
+
         // session manager
         session = new SessionManager(getApplicationContext());
 
-        if (!session.isLoggedIn()) {
+        if (!session.isLoggedIn() || user == null) {
             Log.d(TAG,"SUNT AICI");
             logoutUser();
         } else {
+            urlProfileImg = user.getProfileImage();
+            Log.d(TAG, "UserName: "+user.getName()+"id: "+user.getId());
+            Log.d(TAG, "ProfilePic:"+urlProfileImg);
 
             Log.d(TAG, "is loggedin");
 
@@ -132,10 +137,6 @@ public class MainActivity extends AppCompatActivity {
 
 
             PACKAGE_NAME = getApplicationContext().getPackageName();
-
-
-            // Fetching user details from sqlite
-            User user = db.getUserDetails();
         }
     }
 
@@ -224,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
         switch (navItemIndex) {
             case 0:
                 // home
-                FeedFragment homeFragment = new FeedFragment();
+                FeedFragment homeFragment = FeedFragment.newInstance(user);
                 return homeFragment;
             case 1:
                 // new post
@@ -232,14 +233,14 @@ public class MainActivity extends AppCompatActivity {
                 return photosFragment;
             case 2:
                 // gallery
-                ProfileFragment profileFragment = new ProfileFragment();
+                ProfileFragment profileFragment = ProfileFragment.newInstance(user, user.getId());
                 return profileFragment;
             case 3:
                 // settings
                 SettingsFragment settingsFragment = new SettingsFragment();
                 return settingsFragment;
             default:
-                return new FeedFragment();
+                return FeedFragment.newInstance(user);
         }
     }
 
@@ -368,9 +369,8 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_logout) {
-            Toast.makeText(getApplicationContext(), "Logout user!", Toast.LENGTH_LONG).show();
-            return true;
+        if (id == R.id.action_refresh) {
+            FeedFragment.getFeeds();
         }
 
         // user is in notifications fragment
@@ -407,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
         // Launching the login activity
         Intent intent = new Intent(MainActivity.this, LoginActivity.class);
         startActivity(intent);
+        AppController.getInstance().getRequestQueue().cancelAll("get_feed");
         finish();
     }
 }

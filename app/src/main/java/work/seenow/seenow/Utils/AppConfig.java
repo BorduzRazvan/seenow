@@ -2,20 +2,26 @@ package work.seenow.seenow.Utils;
 
 public class AppConfig {
     // Server user login url
-    public static String URL_LOGIN = "http://7f071333.ngrok.io/login.php";
+    public static String URL_LOGIN = "http://e87978a3.ngrok.io/login.php";
 
     // Server user register url
-    public static String URL_REGISTER = "http://7f071333.ngrok.io/register.php";
+    public static String URL_REGISTER = "http://e87978a3.ngrok.io/register.php";
 
     // Server feed url
-    public static String URL_FEED = "https://api.androidhive.info/feed/feed.json";
+    public static String URL_FEED = "http://e87978a3.ngrok.io/feed.php";
 
+    // Server Image url
+    public static String URL_SERVER = "http://e87978a3.ngrok.io/images/";
 
+    // Server Actions url
+    public static String URL_ACTIONS ="http://e87978a3.ngrok.io/actions.php";
+
+    // Server Gallery Url
+    public static String URL_GALLERY ="http:///e87978a3.ngrok.io/gallery.php";
     // Place for SeeNow Picture
     public static final String IMAGE_DIRECTORY_NAME = "SeenowPictures";
 
     // Server upload url
     private static final String ROOT_URL = "http://192.168.0.102/upload.php?apicall=";
     public static final String UPLOAD_URL = ROOT_URL + "uploadpic";
-    public static final String GET_PICS_URL = ROOT_URL + "getpics";
 }

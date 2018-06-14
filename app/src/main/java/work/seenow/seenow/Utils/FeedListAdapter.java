@@ -1,34 +1,45 @@
 package work.seenow.seenow.Utils;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.Context;
-import android.text.Html;
-import android.text.TextUtils;
-import android.text.format.DateUtils;
-import android.text.method.LinkMovementMethod;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageButton;
+import android.widget.Button;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import work.seenow.seenow.R;
 
 public class FeedListAdapter extends BaseAdapter {
+
+    private static final String TAG = FeedListAdapter.class.getSimpleName();
     private Activity activity;
     private LayoutInflater inflater;
     private List<FeedItem> feedItems;
+    private User user;
     ImageLoader imageLoader = AppController.getInstance().getImageLoader();
 
-    public FeedListAdapter(Activity activity, List<FeedItem> feedItems) {
+    public FeedListAdapter(Activity activity, List<FeedItem> feedItems, User user) {
         this.activity = activity;
         this.feedItems = feedItems;
+        this.user = user;
     }
 
     @Override
@@ -57,72 +68,73 @@ public class FeedListAdapter extends BaseAdapter {
 
         if (imageLoader == null)
             imageLoader = AppController.getInstance().getImageLoader();
-
-        TextView name = (TextView) convertView.findViewById(R.id.name);
-        TextView timestamp = (TextView) convertView
-                .findViewById(R.id.timestamp);
-        TextView statusMsg = (TextView) convertView
-                .findViewById(R.id.txtStatusMsg);
-        TextView url = (TextView) convertView.findViewById(R.id.txtUrl);
-        NetworkImageView profilePic = (NetworkImageView) convertView
-                .findViewById(R.id.profilePic);
+        TextView author_name = (TextView) convertView.findViewById(R.id.author_name);
+        TextView posted_at = (TextView) convertView.findViewById(R.id.posted_at);
+        TextView founduser_name = (TextView) convertView.findViewById(R.id.fountuser_name);
+        TextView trustLevel = (TextView) convertView.findViewById(R.id.trustLevel);
+        TextView description = (TextView) convertView.findViewById(R.id.description);
+        final TextView likes = (TextView) convertView.findViewById(R.id.numberLikes);
+        NetworkImageView profilePic = (NetworkImageView) convertView.findViewById(R.id.profilePic);
         FeedImageView feedImageView = (FeedImageView) convertView
                 .findViewById(R.id.feedImage1);
-        final ImageButton likeButton = (ImageButton) convertView.findViewById(R.id.likeButton);
+        final Button likeButton = (Button) convertView.findViewById(R.id.likeButton);
+        Button shareButton = (Button) convertView.findViewById(R.id.likeButton);
+        final FeedItem item = feedItems.get(position);
+        FeedImageView feedImageView1= (FeedImageView) convertView.findViewById(R.id.feedImage1);
+        /** Define if like buttons is pressed */
+        if(item.isLiked())
+        {
+            likeButton.setTextColor(Color.BLUE);
+        }
+        else
+        {
+            likeButton.setTextColor(Color.BLACK);
+        }
+
 
         likeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(likeButton.getTag() == "Like")
+                Log.d(TAG,"ID_USER: "+user.getId()+" si id_feed: "+item.getId());
+                item.toggleLike();
+                /** Define if like buttons is pressed */
+                if(item.isLiked())
                 {
-                    likeButton.setImageResource(R.drawable.likepressed);
-                    likeButton.setTag("Liked");
+                    action("addLike",user.getId(),item.getId());
+                    item.setLikes(item.getLikes() +1);
+                    likeButton.setTextColor(Color.BLUE);
                 }
                 else
                 {
-                    likeButton.setImageResource(R.drawable.like);
-                    likeButton.setTag("Like");
+                    action("removeLike",user.getId(),item.getId());
+                    item.setLikes(item.getLikes() -1);
+                    likeButton.setTextColor(Color.BLACK);
                 }
+                likes.setText(((Integer)item.getLikes()).toString()+" likes");
             }
         });
-        FeedItem item = feedItems.get(position);
 
-        name.setText(item.getName());
-
-        // Converting timestamp into x ago format
-        CharSequence timeAgo = DateUtils.getRelativeTimeSpanString(
-                Long.parseLong(item.getTimeStamp()),
-                System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
-        timestamp.setText(timeAgo);
-
-        // Chcek for empty status message
-        if (!TextUtils.isEmpty(item.getStatus())) {
-            statusMsg.setText(item.getStatus());
-            statusMsg.setVisibility(View.VISIBLE);
-        } else {
-            // status is empty, remove from view
-            statusMsg.setVisibility(View.GONE);
+        author_name.setText(item.getAuthor_name());
+        posted_at.setText(item.getPosted_at());
+        if(item.getFound_user().equals("none")){
+            founduser_name.setVisibility(View.INVISIBLE);
+            trustLevel.setVisibility(View.INVISIBLE);
+        }
+        else {
+            founduser_name.setVisibility(View.VISIBLE);
+            trustLevel.setVisibility(View.VISIBLE);
+            founduser_name.setText("Found: "+item.getFound_user());
+            trustLevel.setText("TrustLevel: "+((Integer)item.getTrustLevel()).toString());
         }
 
-        // Checking for null feed url
-        if (item.getUrl() != null) {
-            url.setText(Html.fromHtml("<a href=\"" + item.getUrl() + "\">"
-                    + item.getUrl() + "</a> "));
-
-            // Making url clickable
-            url.setMovementMethod(LinkMovementMethod.getInstance());
-            url.setVisibility(View.VISIBLE);
-        } else {
-            // url is null, remove from the view
-            url.setVisibility(View.GONE);
-        }
+        description.setText(item.getDescription());
+        likes.setText(((Integer)item.getLikes()).toString()+" likes");
 
         // user profile pic
-        profilePic.setImageUrl(item.getProfilePic(), imageLoader);
+        profilePic.setImageUrl(item.getProfile_picture_url(), imageLoader);
 
         // Feed image
-        if (item.getImge() != null) {
-            feedImageView.setImageUrl(item.getImge(), imageLoader);
+            feedImageView.setImageUrl(item.getPicture_url(), imageLoader);
             feedImageView.setVisibility(View.VISIBLE);
             feedImageView
                     .setResponseObserver(new FeedImageView.ResponseObserver() {
@@ -134,11 +146,65 @@ public class FeedListAdapter extends BaseAdapter {
                         public void onSuccess() {
                         }
                     });
-        } else {
-            feedImageView.setVisibility(View.GONE);
-        }
 
         return convertView;
     }
+
+
+    private void action(final String action_type, final int userId, final int feedId)
+    {
+        {
+            StringRequest strReq = new StringRequest(Request.Method.POST,
+                    AppConfig.URL_ACTIONS, new Response.Listener<String>() {
+
+                @Override
+                public void onResponse(String response) {
+                    Log.d(TAG, "Login Response: " + response.toString());
+
+                    try {
+                        JSONObject jObj = new JSONObject(response);
+                        boolean error = jObj.getBoolean("error");
+
+//                     Check for error node in json
+                        if (!error) {
+
+                        } else {
+
+                        }
+                    } catch (JSONException e) {
+                        // JSON error
+                        e.printStackTrace();
+                    }
+
+                }
+            }, new Response.ErrorListener() {
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+                }
+            }) {
+
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("userId", ((Integer)userId).toString());
+                    params.put("feedId", ((Integer)feedId).toString());
+                    params.put("action_type", action_type);
+
+                    return params;
+                }
+
+            };
+
+
+            // Adding request to request queue
+            AppController.getInstance().addToRequestQueue(strReq, "action");
+
+        }
+    }
+
+
 
 }

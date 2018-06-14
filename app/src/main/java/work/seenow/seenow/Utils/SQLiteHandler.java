@@ -15,7 +15,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
     // All Static variables
     // Database Version
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 6;
 
     // Database Name
     private static final String DATABASE_NAME = "seenow_db";
@@ -33,6 +33,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     private static final String KEY_USE_REC = "use_Recognizer";
     private static final String KEY_GENDER = "gender";
     private static final String KEY_BIRTHDAY = "birthday";
+    private static final String KEY_NR_PICTURES = "nr_pictures";
+    private static final String KEY_NR_friends = "nr_friends";
+    private static final String KEY_NR_foundIn = "nr_foundIn";
+    private static final String KEY_CREATED_AT = "created_at";
 
 
     public SQLiteHandler(Context context) {
@@ -47,7 +51,9 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 + KEY_EMAIL + " TEXT UNIQUE," + KEY_PROFILE_PIC + " TEXT,"
                 + KEY_BIRTHDAY + " TEXT," + KEY_COUNTRY + " TEXT, "
                 + KEY_GENDER + " TEXT," + KEY_POINTS+ " INTEGER, "
-                + KEY_USE_REC + " TEXT)";
+                + KEY_USE_REC + " TEXT," + KEY_NR_PICTURES + " INTEGER, "
+                + KEY_NR_foundIn +" INTEGER, "+ KEY_NR_friends + " INTEGER, "
+                + KEY_CREATED_AT +" TEXT)";
         db.execSQL(CREATE_LOGIN_TABLE);
 
         Log.d(TAG, "Database tables created");
@@ -79,6 +85,9 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put(KEY_USE_REC, u.getUseRecognizer());
         values.put(KEY_GENDER, u.getGender());
         values.put(KEY_ID, u.getId());
+        values.put(KEY_NR_foundIn, u.numberofAppereances.get());
+        values.put(KEY_NR_PICTURES, u.numberofPhotosTaken.get());
+        values.put(KEY_NR_friends, u.numberofFriends.get());
 
         // Inserting Row
         long id = db.insert(TABLE_USER, null, values);
@@ -101,10 +110,13 @@ public class SQLiteHandler extends SQLiteOpenHelper {
 
 
             User user = new User(cursor.getInt(0), cursor.getString(1),
-                    cursor.getString(2), cursor.getString(3),
+                    cursor.getString(2),(cursor.getString(3)).substring(AppConfig.URL_SERVER.length() -1),
                     cursor.getString(4), cursor.getString(5),
                     cursor.getString(6), cursor.getInt(7),
-                    cursor.getString(8));
+                    cursor.getString(8),cursor.getString(12));
+                user.numberofAppereances.set(cursor.getLong(10));
+                user.numberofPhotosTaken.set(cursor.getLong(9));
+                user.numberofFriends.set(cursor.getLong(11));
             return user;
         }else {
             return null;
@@ -120,10 +132,13 @@ public class SQLiteHandler extends SQLiteOpenHelper {
             cursor.moveToFirst();
             if (cursor.getCount() > 0) {
                 User user = new User(cursor.getInt(0), cursor.getString(1),
-                        cursor.getString(2), cursor.getString(3),
+                        cursor.getString(2),(cursor.getString(3)).substring(AppConfig.URL_SERVER.length() -1),
                         cursor.getString(4), cursor.getString(5),
                         cursor.getString(6), cursor.getInt(7),
-                        cursor.getString(8));
+                        cursor.getString(8),cursor.getString(12));
+                user.numberofAppereances.set(cursor.getLong(10));
+                user.numberofPhotosTaken.set(cursor.getLong(9));
+                user.numberofFriends.set(cursor.getLong(11));
                 return user;
             }else {
                 return null;

@@ -74,6 +74,42 @@
                     android:textSize="@dimen/profile_name"
                     android:textStyle="bold" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="@dimen/dimen_8dp"
+                        android:fontFamily="sans-serif"
+                        android:letterSpacing="0.1"
+                        android:text="@{user.country}"
+                        android:textColor="@android:color/white"
+                        android:textSize="@dimen/profile_name"
+                        android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/dimen_8dp"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.1"
+                    android:text="@{user.birthday}"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/profile_name"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/dimen_8dp"
+                    android:fontFamily="sans-serif"
+                    android:letterSpacing="0.1"
+                    android:text="@{user.created_at}"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/profile_name"
+                    android:textStyle="bold" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -156,7 +192,6 @@
                         android:textSize="@dimen/profile_meta_label" />
 
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -176,7 +211,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/Circle"
+                        android:text="@string/Friends"
                         android:textSize="@dimen/profile_meta_label" />
 
                 </LinearLayout>

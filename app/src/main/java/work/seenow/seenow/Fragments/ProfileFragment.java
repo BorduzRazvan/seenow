@@ -10,15 +10,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import work.seenow.seenow.R;
+import work.seenow.seenow.Utils.AppConfig;
+import work.seenow.seenow.Utils.AppController;
+import work.seenow.seenow.Utils.FeedItem;
 import work.seenow.seenow.Utils.GridSpacingItemDecoration;
 import work.seenow.seenow.Utils.PostsAdapter;
 import work.seenow.seenow.Utils.ProfileItem;
@@ -34,17 +49,18 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
     private RecyclerView recyclerView;
     private ActivityGalleryBinding binding;
     private User user;
+    private static ArrayList<ProfileItem> posts;
 
     public ProfileFragment() {
         // Required empty public constructor
     }
 
 
-    public static ProfileFragment newInstance(int page, String title) {
+    public static ProfileFragment newInstance(User user, int id) {
         ProfileFragment fragmentFirst = new ProfileFragment();
         Bundle args = new Bundle();
-        args.putInt("someInt", page);
-        args.putString("someTitle", title);
+        args.putSerializable("user",user);
+        args.putInt("userId",id);
         fragmentFirst.setArguments(args);
         return fragmentFirst;
     }
@@ -62,22 +78,16 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
                              Bundle savedInstanceState) {
 
         View view;
-        binding = DataBindingUtil.setContentView(getActivity(), R.layout.activity_gallery);
-        int targetUser = getArguments().getInt("TARGET_USER_ID");
-//        Toolbar toolbar = binding.toolbar;
-//        setSupportActionBar(toolbar);
-//        getSupportActionBar().setTitle(R.string.toolbar_profile);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
+        binding = DataBindingUtil.inflate(
+                inflater, R.layout.activity_gallery, container, false);
+        user = (User)getArguments().getSerializable("user");
+        int id = (int)getArguments().getInt("userId");
+        posts = new ArrayList<ProfileItem>();
         handlers = new MyClickHandlers(getContext());
-
-        user = new SQLiteHandler(getActivity().getApplicationContext()).getUserDetails(targetUser);
         renderProfile();
-
+        getPosts(id);
         initRecyclerView();
-
         view = binding.getRoot();
-
         return view;
     }
 
@@ -90,7 +100,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         recyclerView.addItemDecoration(new GridSpacingItemDecoration(3, dpToPx(4), true));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setNestedScrollingEnabled(false);
-        mAdapter = new PostsAdapter(getPosts(), this);
+        mAdapter = new PostsAdapter(posts, this);
         recyclerView.setAdapter(mAdapter);
     }
 
@@ -106,17 +116,93 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         binding.content.setHandlers(handlers);
     }
 
-    private ArrayList<ProfileItem> getPosts() {
-        ArrayList<ProfileItem> posts = new ArrayList<>();
-        for (int i = 1; i < 10; i++) {
-            ProfileItem post = new ProfileItem();
-            post.setImageUrl("https://api.androidhive.info/images/nature/" + i + ".jpg");
+    private void getPosts(final int id) {
+       posts.clear();
+       StringRequest strReq = new StringRequest(Request.Method.POST,
+        AppConfig.URL_GALLERY, new Response.Listener<String>() {
 
-            posts.add(post);
+        @Override
+        public void onResponse(String response) {
+            Log.d(TAG, "Login Response: " + response.toString());
+            try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+
+//                  Check for error node in json
+                    if (!error) {
+                        parseJsonProfile(jObj, id);
+                    } else {
+                            // Error in login. Get the error message
+                            String errorMsg = jObj.getString("error_msg");
+                        }
+            } catch (JSONException e) {
+                        // JSON error
+                        e.printStackTrace();
+            }
+
         }
+        }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+                }
+            }) {
 
-        return posts;
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("id", ((Integer)user.getId()).toString());
+
+                    return params;
+                }
+
+            };
+
+
+            // Adding request to request queue
+            AppController.getInstance().addToRequestQueue(strReq, "get_pictures");
     }
+
+
+    /**
+     * Parsing json reponse and passing the data to feed view list adapter
+     * */
+    private void parseJsonProfile(JSONObject response,int id) {
+        try {
+            JSONArray gArray = response.getJSONArray("pics");
+            Log.d(TAG, "AICI: "+response.toString());
+            for (int i = 0; i < gArray.length(); i++) {
+
+                JSONObject feedObj = (JSONObject) gArray.get(i);
+                if(user.getId() != id)
+                {
+                    if(feedObj.getString("visibility").equals("v"))
+                    {
+                        ProfileItem item = new ProfileItem();
+                        item.setImageUrl(AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                        Log.d(TAG, "Am link:"+AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                        posts.add(item);
+                    }
+                }
+                else
+                {
+                    ProfileItem item = new ProfileItem();
+                    item.setImageUrl(AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                    Log.d(TAG, "Am link:"+AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                    posts.add(item);
+                }
+            }
+
+            mAdapter.notifyDataSetChanged();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
 
     @Override
     public void onPostClicked(ProfileItem post) {
@@ -137,12 +223,9 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
          * will be updated on Fab click
          */
         public void onProfileFabClicked(View view) {
-            user.setName("Sir David Attenborough");
-            user.setProfileImage("https://api.androidhive.info/images/nature/david1.jpg");
-            // updating ObservableField
-            user.numberofPhotosTaken.set(5500L);
-            user.numberofAppereances.set(5050890L);
-            user.numberofFriends.set(180L);
+            user.setName(user.getName());
+            Log.d(TAG,user.getProfileImage());
+            user.setProfileImage(user.getProfileImage());
         }
 
         public boolean onProfileImageLongPressed(View view) {

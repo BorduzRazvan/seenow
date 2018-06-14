@@ -40,32 +40,41 @@
                 android:paddingLeft="@dimen/feed_item_profile_info_padd" >
 
                 <TextView
-                    android:id="@+id/name"
+                    android:id="@+id/author_name"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:textSize="@dimen/feed_item_profile_name"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/timestamp"
+                    android:id="@+id/posted_at"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/timestamp"
                     android:textSize="@dimen/feed_item_timestamp" />
+
+                <TextView
+                    android:id="@+id/fountuser_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="@dimen/feed_item_status_pad_left_right"
+                    android:paddingRight="@dimen/feed_item_status_pad_left_right"
+                    android:paddingTop="@dimen/feed_item_status_pad_top" />
+
+                <TextView
+                    android:id="@+id/trustLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="@dimen/feed_item_status_pad_left_right"
+                    android:paddingRight="@dimen/feed_item_status_pad_left_right"
+                    android:paddingTop="@dimen/feed_item_status_pad_top" />
             </LinearLayout>
         </LinearLayout>
 
         <TextView
-            android:id="@+id/txtStatusMsg"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="5dp"
-            android:paddingLeft="@dimen/feed_item_status_pad_left_right"
-            android:paddingRight="@dimen/feed_item_status_pad_left_right"
-            android:paddingTop="@dimen/feed_item_status_pad_top" />
-
-        <TextView
-            android:id="@+id/txtUrl"
+            android:id="@+id/description"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:linksClickable="true"
@@ -94,12 +103,6 @@
                 android:layout_weight="1"
                 android:text="Likes" />
 
-            <TextView
-                android:id="@+id/numberShares"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Shares" />
         </LinearLayout>
 
         <LinearLayout
@@ -107,22 +110,19 @@
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
-            <ImageButton
+            <Button
                 android:id="@+id/likeButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                app:srcCompat="@drawable/like" />
+                android:text="Like" />
 
-            <ImageButton
-                android:id="@+id/shareButton"
+            <Button
+                android:id="@+id/ShareButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                app:srcCompat="@drawable/share" />
-
+                android:text="Share" />
         </LinearLayout>
 
     </LinearLayout>
