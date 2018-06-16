@@ -50,6 +50,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
     private ActivityGalleryBinding binding;
     private User user;
     private static ArrayList<ProfileItem> posts;
+    private int targetuser_id;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -81,11 +82,11 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         binding = DataBindingUtil.inflate(
                 inflater, R.layout.activity_gallery, container, false);
         user = (User)getArguments().getSerializable("user");
-        int id = (int)getArguments().getInt("userId");
+        targetuser_id = (int)getArguments().getInt("userId");
         posts = new ArrayList<ProfileItem>();
         handlers = new MyClickHandlers(getContext());
+        getPosts(user.getId());
         renderProfile();
-        getPosts(id);
         initRecyclerView();
         view = binding.getRoot();
         return view;
@@ -131,6 +132,15 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
 //                  Check for error node in json
                     if (!error) {
                         parseJsonProfile(jObj, id);
+                        JSONObject jSUser = jObj.getJSONObject("user");
+                        user.setName(jSUser.getString("fullname"));
+                        user.setBirthday(jSUser.getString("birthday"));
+                        user.setCountry(jSUser.getString("country"));
+                        user.setProfileImage(jSUser.getString("profilePicture"));
+                        user.numberofFriends.set(jSUser.getLong("nr_friends"));
+                        user.numberofAppereances.set(jSUser.getLong("nr_foundIn"));
+                        user.numberofPhotosTaken.set(jSUser.getLong("nr_pictures"));
+
                     } else {
                             // Error in login. Get the error message
                             String errorMsg = jObj.getString("error_msg");
@@ -152,7 +162,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
                 protected Map<String, String> getParams() {
                     // Posting parameters to login url
                     Map<String, String> params = new HashMap<String, String>();
-                    params.put("id", ((Integer)user.getId()).toString());
+                    params.put("id", ((Integer)targetuser_id).toString());
 
                     return params;
                 }

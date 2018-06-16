@@ -18,6 +18,9 @@ public class AppConfig {
 
     // Server Gallery Url
     public static String URL_GALLERY ="http:///e87978a3.ngrok.io/gallery.php";
+
+    // Server Upload Url
+    public static String URL_UPLOAD= "http:///e87978a3.ngrok.io/upload.php";
     // Place for SeeNow Picture
     public static final String IMAGE_DIRECTORY_NAME = "SeenowPictures";
 

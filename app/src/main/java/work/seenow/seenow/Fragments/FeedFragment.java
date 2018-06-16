@@ -83,7 +83,7 @@ public class FeedFragment extends Fragment  {
                             "none", feedObj.getString("picture_name"),
                             feedObj.getString("profile_pic"),
                             feedObj.getString("posted_at"), feedObj.getInt("LIKES"),
-                            -1, feedObj.getInt("LIKED"));
+                            -1, feedObj.getInt("LIKED"), feedObj.getInt("author_id"),-1);
                 }
                 else
                 {
@@ -92,7 +92,7 @@ public class FeedFragment extends Fragment  {
                                 feedObj.getString("fullname"), feedObj.getString("picture_name"),
                                 feedObj.getString("profile_pic"),
                                 feedObj.getString("posted_at"), feedObj.getInt("LIKES"),
-                                feedObj.getInt("trust"), feedObj.getInt("LIKED"));
+                                feedObj.getInt("trust"), feedObj.getInt("LIKED"),feedObj.getInt("author_id"),feedObj.getInt("founduser_id"));
                 }
                 Log.d(TAG,"Sunt aici, post_pic: "+item.getPicture_url()+" si profile_pic:"+item.getProfile_picture_url());
                 feedItems.add(item);

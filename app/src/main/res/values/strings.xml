@@ -30,6 +30,9 @@
     <string name="TakePicture">Take a new picture</string>
     <string name="Upload">Upload</string>
     <string name="PredictHint">If you know the person already write the name</string>
+    <string name="select_visibility">Please select the visibility status of the image( v- visible, i- invisible)</string>
+    <string name="Visibile">Visiblie</string>
+    <string name="Invisible">Invisible</string>
 
 
     <!--Strings used for ProfileActivity-->

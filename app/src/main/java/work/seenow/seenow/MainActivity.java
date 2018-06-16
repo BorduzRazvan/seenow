@@ -7,7 +7,10 @@ import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.SessionManager;
 import work.seenow.seenow.Utils.User;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtName, txtWebsite;
     private Toolbar toolbar;
     private FloatingActionButton fab;
+    private int target_user;
 
     // urls to load navigation header background image
     // and profile image
@@ -71,11 +75,52 @@ public class MainActivity extends AppCompatActivity {
     private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler mHandler;
 
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // do UI updates
+            target_user = intent.getIntExtra("targetuser_id",-1);
+            CURRENT_TAG = TAG_PROFILE;
+            navItemIndex = 2;
+            Log.d(TAG,"Sunt aici si am valorile: "+target_user);
+            loadHomeFragment();
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // do UI updates
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("profile");
+        this.registerReceiver(broadcastReceiver, filter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        this.unregisterReceiver(broadcastReceiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                CURRENT_TAG = TAG_PROFILE;
+                navItemIndex = 2;
+                target_user = Integer.parseInt(intent.getStringExtra("target_id"));
+                loadHomeFragment();
+            }
+
+
+        };
 
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
@@ -229,11 +274,11 @@ public class MainActivity extends AppCompatActivity {
                 return homeFragment;
             case 1:
                 // new post
-                CameraFragment photosFragment = new CameraFragment();
+                CameraFragment photosFragment = CameraFragment.newInstance(user);
                 return photosFragment;
             case 2:
                 // gallery
-                ProfileFragment profileFragment = ProfileFragment.newInstance(user, user.getId());
+                ProfileFragment profileFragment = ProfileFragment.newInstance(user, target_user);
                 return profileFragment;
             case 3:
                 // settings
@@ -275,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.nav_MyProfile:
                         navItemIndex = 2;
                         CURRENT_TAG = TAG_PROFILE;
+                        target_user = user.getId();
                         break;
                     case R.id.nav_Settings:
                         navItemIndex = 3;

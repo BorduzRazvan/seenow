@@ -2,8 +2,10 @@ package work.seenow.seenow.Fragments;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -17,24 +19,30 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.Volley;
+import com.android.volley.toolbox.StringRequest;
 
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,6 +51,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -50,55 +60,162 @@ import java.util.Map;
 
 import work.seenow.seenow.R;
 import work.seenow.seenow.Utils.AppConfig;
-import work.seenow.seenow.Utils.VolleyMultipartRequest;
+import work.seenow.seenow.Utils.AppController;
+import work.seenow.seenow.Utils.User;
+
 
 public class CameraFragment extends Fragment {
     // LogCat tag
     private static final String TAG = CameraFragment.class.getSimpleName();
     // Camera activity request codes
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
+    private static final int STORAGE_IMAGE_CHOOSE_REQUEST_CODE = 200;
     private Uri fileUri; // file url to store image
     private Bitmap forUpload; // Bitmap for Upload
-    private Button btnCapturePicture, btnUploadPicture, uploadButton;
-    private EditText predictLabel;
+    private Button btnCapturePicture, btnExistingPicture, uploadButton;
+    private AutoCompleteTextView predictLabel;
+    private TextView textView1;
     private ImageView imagePreview;
     private ExifInterface exifObject;
+    private User user;
+    private ArrayList<String> listNames;
+    private ArrayList<Integer> listNames_uids;
+    ArrayAdapter<String> adapter;
+    private EditText description, visibility;
 
 
+    public static CameraFragment newInstance(User user) {
+        CameraFragment fragment = new CameraFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("user",user);
+        fragment.setArguments(bundle);
 
-    public CameraFragment() {
-        // Required empty public constructor
+        return fragment;
     }
 
-    // Store instance variables based on arguments passed
+    private void getSugestions(final String s) {
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                AppConfig.URL_ACTIONS, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Login Response: " + response.toString());
+                try {
+                    listNames.clear();
+                    listNames_uids.clear();
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        /** Ok */
+                        JSONArray sArray = jObj.getJSONArray("suggests");
+                        Log.d(TAG, "AICI: "+response.toString());
+                        for (int i = 0; i < sArray.length(); i++) {
+
+                            JSONObject sObj = (JSONObject) sArray.get(i);
+                            listNames.add(sObj.getString("fullname"));
+                            listNames_uids.add(sObj.getInt("id"));
+                        }
+
+                    } else {
+                        listNames.add("unknown");
+                        listNames_uids.add(-1);
+                        // Error in login. Get the error message
+                        String errorMsg = jObj.getString("error_msg");
+                    }
+                    adapter.clear();
+                    String[] stringArray = listNames.toArray(new String[0]);
+                    Log.d(TAG, "Sunt aici si am string: "+ Arrays.toString(stringArray));
+                    adapter.addAll(stringArray);
+                    adapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    // JSON error
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Login Error: " + error.getMessage());
+                listNames.add("unknown");
+                listNames_uids.add(-1);
+                adapter.clear();
+                String[] stringArray = listNames.toArray(new String[0]);
+                adapter.addAll(stringArray);
+                adapter.notifyDataSetChanged();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("action_type", "getSuggestions");
+                params.put("suggest",s);
+
+                return params;
+            }
+
+        };
+
+
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, "get_feed");
+
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
-    // Inflate the view for the fragment based on layout XML
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_camera, container, false);
-
+        listNames = new ArrayList<String>();
+        listNames_uids = new ArrayList<Integer>();
+        user = (User) getArguments().getSerializable("user");
         btnCapturePicture = (Button) view.findViewById(R.id.NewPictureButton);
-        btnUploadPicture = (Button) view.findViewById(R.id.ExistingPictureButton);
+        btnExistingPicture = (Button) view.findViewById(R.id.ExistingPictureButton);
         uploadButton = (Button) view.findViewById(R.id.buttonUpload);
 
-        predictLabel = (EditText) view.findViewById(R.id.predictLabel);
+        visibility = (EditText) view.findViewById(R.id.visibility);
+        textView1 = (TextView) view.findViewById(R.id.predictLabel);
+        predictLabel = (AutoCompleteTextView) view.findViewById(R.id.editText1);
+        String[] stringArray = listNames.toArray(new String[0]);
+        adapter = new ArrayAdapter<String> (getActivity().getApplicationContext(),
+                R.layout.simple_dropdown_item_1line, stringArray);
+        predictLabel.setAdapter(adapter);
+        description = (EditText) view.findViewById(R.id.description);
+        predictLabel.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                getSugestions(predictLabel.getText().toString());
+            }
+        });
+
         imagePreview = (ImageView) view.findViewById(R.id.ImageView);
 
         /** open image chooser */
-        btnUploadPicture.setOnClickListener(new View.OnClickListener() {
+        btnExistingPicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(i, 100);
+                startActivityForResult(i, STORAGE_IMAGE_CHOOSE_REQUEST_CODE);
             }
         });
-        Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(i, 100);
 
         /**         * Capture image button click event */
         btnCapturePicture.setOnClickListener(new View.OnClickListener() {
@@ -107,7 +224,15 @@ public class CameraFragment extends Fragment {
             public void onClick(View v) {
                 // capture picture
                 if (isStoragePermissionGranted()) {
-                    captureImage();
+
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+                    fileUri = getOutputMediaFileUri();
+
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
+
+                    // start the image capture Intent
+                   startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
                 }
             }
         });
@@ -115,7 +240,29 @@ public class CameraFragment extends Fragment {
         uploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                uploadBitmap(forUpload);
+                String local_description = description.getText().toString();
+                if(local_description.isEmpty())
+                {
+                    local_description = "";
+                }
+
+                int local_foundUser;
+                if(listNames.contains(predictLabel.getText().toString()))
+                {
+                    local_foundUser=listNames_uids.get(listNames.indexOf(predictLabel.getText().toString()));
+                }
+                else
+                {
+                    local_foundUser = -1;
+                }
+
+                String visibility_local = visibility.getText().toString();
+                if(!visibility_local.equals("v") || (!visibility_local.equals("i"))){
+                    visibility_local = "v";
+                }
+                Log.d(TAG,"Am datele: "+local_description+ ".si."+local_foundUser+".si."+visibility_local+".si."+user.getId());
+                uploadBitmap(local_description, local_foundUser, visibility_local);
+
             }
         });
 
@@ -130,6 +277,17 @@ public class CameraFragment extends Fragment {
         return view;
     }
 
+
+    private String getPath(Uri contentUri) {
+        String[] proj = { MediaStore.Images.Media.DATA };
+        CursorLoader loader = new CursorLoader(getActivity().getApplicationContext(),    contentUri, proj, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
 
 
     /**
@@ -151,14 +309,6 @@ public class CameraFragment extends Fragment {
      * Launching camera app to capture image
      */
     private void captureImage() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        fileUri = getOutputMediaFileUri();
-
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-
-        // start the image capture Intent
-        getActivity().startActivityForResult(intent, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
     }
 
 
@@ -199,7 +349,10 @@ public class CameraFragment extends Fragment {
                 imagePreview.setVisibility(View.VISIBLE);
                 /** Make the upload button visible */
                 getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
-                predictLabel.setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.visibility).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.description).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.editText1).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.predictLabel).setVisibility(View.VISIBLE);
             }
         }
     }
@@ -218,7 +371,7 @@ public class CameraFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "Aici");
-        if (requestCode == 100 && resultCode == Activity.RESULT_OK && data != null) {
+        if (requestCode == STORAGE_IMAGE_CHOOSE_REQUEST_CODE && resultCode == Activity.RESULT_OK && data != null) {
 
             //getting the image Uri
             fileUri = data.getData();
@@ -229,12 +382,17 @@ public class CameraFragment extends Fragment {
                 imagePreview.setVisibility(View.VISIBLE);
                 /** Make the upload button visible */
                 getView().findViewById(R.id.buttonUpload).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.visibility).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.description).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.editText1).setVisibility(View.VISIBLE);
+                getView().findViewById(R.id.predictLabel).setVisibility(View.VISIBLE);
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
     /**
      * Creating file uri to store image/video
@@ -347,79 +505,50 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private void uploadBitmap(final Bitmap bitmap) {
-
-        //getting the tag from the edittext
-        final String author="Author";
-
-        //our custom volley request
-        VolleyMultipartRequest volleyMultipartRequest = new VolleyMultipartRequest(Request.Method.POST, AppConfig.UPLOAD_URL,
-                new Response.Listener<NetworkResponse>() {
-                    @Override
-                    public void onResponse(NetworkResponse response) {
-                        try {
-                            JSONObject obj = new JSONObject(new String(response.data));
-                            Toast.makeText(getActivity().getApplicationContext(), obj.getString("message"), Toast.LENGTH_SHORT).show();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getActivity().getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                }) {
-
-            /*
-             * If you want to add more parameters with the image
-             * you can do it here
-             * here we have only one parameter with the image
-             * which is tags
-             * */
+    private void uploadBitmap(final String description, final int predicted, final String visibility) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.URL_UPLOAD, new Response.Listener<String>() {
             @Override
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("author", author);
-                String predictedLabel_string = predictLabel.getText().toString();
-                if(!predictedLabel_string.isEmpty()) {
-                    params.put("predictedLabel", predictLabel.getText().toString());
+            public void onResponse(String response) {
+                Log.d(TAG,"Raspuns"+response);
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d(TAG,"Raspuns"+error.toString());
+
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError{
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                String imageData = imageToString(forUpload);
+                params.put("image",imageData);
+                params.put("visibility",visibility);
+                params.put("id",((Integer)user.getId()).toString());
+                params.put("useRecognizer",user.getUseRecognizer());
+                if(!(description.equals(""))){
+                    params.put("description",description);
                 }
-
+                if(!(predicted == -1)){
+                    params.put("predicted",((Integer)predicted).toString());
+                }
                 return params;
             }
 
-            /*
-             * Here we are passing image by renaming it with a unique name
-             * */
-            @Override
-            protected Map<String, DataPart> getByteData() {
-                Map<String, DataPart> params = new HashMap<>();
-                long imagename = System.currentTimeMillis();
-                params.put("pic", new DataPart(imagename + ".png", getFileDataFromDrawable(bitmap)));
-                return params;
-            }
         };
+        AppController.getInstance().addToRequestQueue(stringRequest, "upload_image");
 
-        //adding the request to volley
-        Volley.newRequestQueue(getContext()).add(volleyMultipartRequest);
     }
 
-    /*
-     * The method is taking Bitmap as an argument
-     * then it will return the byte[] array for the given bitmap
-     * and we will send this array to the server
-     * here we are using PNG Compression with 80% quality
-     * you can give quality between 0 to 100
-     * 0 means worse quality
-     * 100 means best quality
-     * */
-    public byte[] getFileDataFromDrawable(Bitmap bitmap) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
+    private String imageToString(Bitmap bitmap){
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+        byte[] imageBytes = outputStream.toByteArray();
+        String encodedImage = Base64.encodeToString(imageBytes,Base64.DEFAULT);
+        return encodedImage;
     }
-
 
 }

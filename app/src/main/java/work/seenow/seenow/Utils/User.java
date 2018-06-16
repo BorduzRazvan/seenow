@@ -94,6 +94,8 @@ public class User extends BaseObservable implements Serializable {
         notifyPropertyChanged(BR.birthday);
     }
 
+    public void setCountry(String country) { this.country = country; }
+
 
     @Bindable
     public String getEmail() {
@@ -121,7 +123,7 @@ public class User extends BaseObservable implements Serializable {
     }
 
     public void setProfileImage(String profileImage) {
-        this.profileImage = profileImage;
+        this.profileImage = AppConfig.URL_SERVER+profileImage;
         notifyPropertyChanged(BR.profileImage);
     }
 

@@ -6,7 +6,10 @@ import java.util.Map;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +28,7 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import work.seenow.seenow.Fragments.ProfileFragment;
 import work.seenow.seenow.R;
 
 public class FeedListAdapter extends BaseAdapter {
@@ -91,6 +95,18 @@ public class FeedListAdapter extends BaseAdapter {
             likeButton.setTextColor(Color.BLACK);
         }
 
+        profilePic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG,"ID_USER: "+user.getId()+" si targetuser_id: "+((Integer)item.getAuthor_id()).toString());
+                Intent i = new Intent();
+                i.putExtra("target_user", item.getAuthor_id());
+                Intent intent = new Intent();
+                intent.setAction("profile");
+                intent.putExtra("targetuser_id",item.getAuthor_id());
+                activity.sendBroadcast(intent);
+            }
+        });
 
         likeButton.setOnClickListener(new View.OnClickListener() {
             @Override

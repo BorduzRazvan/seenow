@@ -4,10 +4,11 @@ public class FeedItem {
     private int id, likes, trustLevel;
     private boolean isLiked;
     private String author_name, description, found_user, picture_url, profile_picture_url, posted_at;
+    private int author_id, founduser_id;
 
 
     public FeedItem(int id, String author_name, String description, String found_user, String picture_name,
-                    String profile_picture_name, String posted_at, int likes, int trustLevel, int liked){
+                    String profile_picture_name, String posted_at, int likes, int trustLevel, int liked, int author_id, int found_userid){
         this.id = id;
         this.author_name = author_name;
         this.description= description;
@@ -18,8 +19,13 @@ public class FeedItem {
         this.likes = likes;
         this.isLiked = (liked == 1);
         this.trustLevel = trustLevel;
+        this.author_id = author_id;
+        this.founduser_id = founduser_id;
     }
 
+
+    public int getAuthor_id() { return author_id; }
+    public int getFounduser_id() { return founduser_id; }
     public int getId() { return id; }
 
     public void setId(int id) { this.id = id; }
