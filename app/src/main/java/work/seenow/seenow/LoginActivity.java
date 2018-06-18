@@ -79,7 +79,7 @@ public class LoginActivity extends Activity {
                                     String loc = object.getString("location");
                                     String profileImage = object.getString("profile_pic");
                                     String gender = object.getString("gender");
-                                    user = new User(id, fullname, email, profileImage, birthday, loc, gender, "d","14-12-1995");
+                                    user = new User(id, fullname, email, profileImage, birthday, loc, gender, 0, "d","14-12-1995","none");
                                     checkLogin_Social();
                                 } catch (JSONException e) {
 
@@ -192,7 +192,7 @@ public class LoginActivity extends Activity {
                         JSONObject jSUser = jObj.getJSONObject("user");
                             user = new User(jSUser.getInt("id"),jSUser.getString("fullname"),
                                     jSUser.getString("email"), jSUser.getString("profilePicture"),
-                                    jSUser.getString("birthday"), jSUser.getString("country"),jSUser.getString("gender"),jSUser.getInt("points"), jSUser.getString("use_Recognizer"),jSUser.getString("created_at"));
+                                    jSUser.getString("birthday"), jSUser.getString("country"),jSUser.getString("gender"),jSUser.getInt("points"), jSUser.getString("use_Recognizer"),jSUser.getString("created_at"),jSUser.getString("about"));
                             // Inserting row in users table
                             user.numberofFriends.set(jSUser.getLong("nr_friends"));
                             user.numberofAppereances.set(jSUser.getLong("nr_foundIn"));
@@ -279,7 +279,7 @@ public class LoginActivity extends Activity {
                         JSONObject jSUser = jObj.getJSONObject("user");
                         user = new User(jSUser.getInt("id"),jSUser.getString("fullname"),
                                 jSUser.getString("email"), jSUser.getString("profilePicture"),
-                                jSUser.getString("birthday"), jSUser.getString("country"),jSUser.getString("gender"),jSUser.getInt("points"), jSUser.getString("use_Recognizer"), jSUser.getString("created_at"));
+                                jSUser.getString("birthday"), jSUser.getString("country"),jSUser.getString("gender"),jSUser.getInt("points"), jSUser.getString("use_Recognizer"), jSUser.getString("created_at"), jSUser.getString("about"));
                         // Inserting row in users table
 
                         user.numberofFriends.set(jSUser.getLong("nr_friends"));

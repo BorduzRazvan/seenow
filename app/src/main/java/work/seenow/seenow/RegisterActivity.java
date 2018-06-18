@@ -257,7 +257,7 @@ public class RegisterActivity extends Activity {
      *      .{8}                      Ensure string is of length 8.
      $                                End anchor.
      */
-    private static boolean isPasswordStrong(String password) {
+    public static boolean isPasswordStrong(String password) {
         return VALID_PASSWORD_REGEX .matcher(password).matches();
     }
 

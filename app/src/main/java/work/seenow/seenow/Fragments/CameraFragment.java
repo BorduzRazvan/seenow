@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -278,18 +279,6 @@ public class CameraFragment extends Fragment {
     }
 
 
-    private String getPath(Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        CursorLoader loader = new CursorLoader(getActivity().getApplicationContext(),    contentUri, proj, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String result = cursor.getString(column_index);
-        cursor.close();
-        return result;
-    }
-
-
     /**
      * Checking device has camera hardware or not
      * */
@@ -303,14 +292,6 @@ public class CameraFragment extends Fragment {
             return false;
         }
     }
-
-
-    /**
-     * Launching camera app to capture image
-     */
-    private void captureImage() {
-    }
-
 
     /**
      * Here we store the file url as it will be null after returning from camera
@@ -505,7 +486,8 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private void uploadBitmap(final String description, final int predicted, final String visibility) {
+
+    private void modifyTables(final String description, final int predicted, final String visibility, final String fileName) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.URL_UPLOAD, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -524,8 +506,6 @@ public class CameraFragment extends Fragment {
             protected Map<String, String> getParams() throws AuthFailureError{
                 // Posting parameters to login url
                 Map<String, String> params = new HashMap<String, String>();
-                String imageData = imageToString(forUpload);
-                params.put("image",imageData);
                 params.put("visibility",visibility);
                 params.put("id",((Integer)user.getId()).toString());
                 params.put("useRecognizer",user.getUseRecognizer());
@@ -535,10 +515,68 @@ public class CameraFragment extends Fragment {
                 if(!(predicted == -1)){
                     params.put("predicted",((Integer)predicted).toString());
                 }
+                params.put("filename",fileName);
                 return params;
             }
 
         };
+
+        /** After 3 minutes is timeout */
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(180000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        AppController.getInstance().addToRequestQueue(stringRequest, "upload_image");
+
+    }
+
+    private void uploadBitmap(final String description, final int predicted, final String visibility) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, AppConfig.URL_UPLOAD, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG,"Raspuns"+response);
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+
+//                     Check for error node in json
+                    if (!error) {
+                        Log.d(TAG,"Successful uploaded");
+                        String filename = jObj.getString("filename");
+                        modifyTables(description, predicted, visibility, filename);
+                    } else {
+                        // Error in login. Get the error message
+                        String errorMsg = jObj.getString("error_msg");
+                    }
+                } catch (JSONException e) {
+                    // JSON error
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d(TAG,"Raspuns"+error.toString());
+
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError{
+                // Posting parameters to login url
+                Map<String, String> params = new HashMap<String, String>();
+                String imageData = imageToString(forUpload);
+                params.put("image",imageData);
+                params.put("upload_only","yes");
+                return params;
+            }
+
+        };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         AppController.getInstance().addToRequestQueue(stringRequest, "upload_image");
 
     }

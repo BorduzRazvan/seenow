@@ -23,6 +23,7 @@ public class User extends BaseObservable implements Serializable {
     private String gender;
     private String useRecognizer;
     private String created_at;
+    private String about;
 
 
     // profile meta fields are ObservableField, will update the UI
@@ -31,7 +32,8 @@ public class User extends BaseObservable implements Serializable {
     public ObservableField<Long> numberofAppereances = new ObservableField<>();
     public ObservableField<Long> numberofFriends = new ObservableField<>();
     public ObservableField<Integer> numberofPoints = new ObservableField<>();
-    public User(int id, String name, String email, String profileImage, String birthday, String country, String gender, String userRecognizer, String created_at) {
+
+    public User(int id, String name, String email, String profileImage, String birthday, String country, String gender, String userRecognizer, String created_at, String about) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -42,8 +44,9 @@ public class User extends BaseObservable implements Serializable {
         this.gender = gender;
         this.useRecognizer= userRecognizer;
         this.created_at = created_at;
+        this.about = about;
     }
-    public User(int id, String name, String email, String profileImage, String birthday, String country, String gender, int points, String userRecognizer, String created_at) {
+    public User(int id, String name, String email, String profileImage, String birthday, String country, String gender, int points, String userRecognizer, String created_at, String about) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -55,6 +58,7 @@ public class User extends BaseObservable implements Serializable {
         numberofPoints.set(points);
         this.useRecognizer = userRecognizer;
         this.created_at = created_at;
+        this.about = about;
     }
 
     @Bindable
@@ -62,7 +66,14 @@ public class User extends BaseObservable implements Serializable {
 
     public String getGender() { return this.gender; }
 
+    public void setUseRecognizer(String useRecognizer){ this.useRecognizer = useRecognizer; }
+
     public int getId() { return id; }
+
+    @Bindable
+    public String getAbout() { return this.about;}
+
+    public void setAbout(String about) { this.about = about; }
 
     @Bindable
     public String getName() {
@@ -76,8 +87,6 @@ public class User extends BaseObservable implements Serializable {
     }
 
     public String getUseRecognizer() { return useRecognizer; }
-
-    public void addPoint() { numberofPoints.set(numberofPoints.get() + 1); }
 
     @Bindable
     public String getCountry() { return this.country; }
@@ -102,11 +111,6 @@ public class User extends BaseObservable implements Serializable {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-        notifyPropertyChanged(BR.email);
-    }
-
     @BindingAdapter({"profileImage"})
     public static void loadImage(ImageView view, String imageUrl) {
         Glide.with(view.getContext())
@@ -123,7 +127,7 @@ public class User extends BaseObservable implements Serializable {
     }
 
     public void setProfileImage(String profileImage) {
-        this.profileImage = AppConfig.URL_SERVER+profileImage;
+        this.profileImage = AppConfig.URL_SERVER + profileImage;
         notifyPropertyChanged(BR.profileImage);
     }
 

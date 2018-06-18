@@ -23,8 +23,4 @@ public class AppConfig {
     public static String URL_UPLOAD= "http:///e87978a3.ngrok.io/upload.php";
     // Place for SeeNow Picture
     public static final String IMAGE_DIRECTORY_NAME = "SeenowPictures";
-
-    // Server upload url
-    private static final String ROOT_URL = "http://192.168.0.102/upload.php?apicall=";
-    public static final String UPLOAD_URL = ROOT_URL + "uploadpic";
 }

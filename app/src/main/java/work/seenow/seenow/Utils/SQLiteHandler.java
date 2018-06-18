@@ -12,10 +12,9 @@ import java.util.HashMap;
 public class SQLiteHandler extends SQLiteOpenHelper {
 
     private static final String TAG = SQLiteHandler.class.getSimpleName();
-
     // All Static variables
     // Database Version
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 11;
 
     // Database Name
     private static final String DATABASE_NAME = "seenow_db";
@@ -37,7 +36,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
     private static final String KEY_NR_friends = "nr_friends";
     private static final String KEY_NR_foundIn = "nr_foundIn";
     private static final String KEY_CREATED_AT = "created_at";
-
+    private static final String KEY_ABOUT = "about";
 
     public SQLiteHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -53,10 +52,10 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                 + KEY_GENDER + " TEXT," + KEY_POINTS+ " INTEGER, "
                 + KEY_USE_REC + " TEXT," + KEY_NR_PICTURES + " INTEGER, "
                 + KEY_NR_foundIn +" INTEGER, "+ KEY_NR_friends + " INTEGER, "
-                + KEY_CREATED_AT +" TEXT)";
+                + KEY_CREATED_AT +" TEXT, " + KEY_ABOUT + " TEXT)";
         db.execSQL(CREATE_LOGIN_TABLE);
 
-        Log.d(TAG, "Database tables created");
+        Log.d(TAG, "Database tables created si am string-ul "+CREATE_LOGIN_TABLE);
     }
 
     // Upgrading database
@@ -88,6 +87,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         values.put(KEY_NR_foundIn, u.numberofAppereances.get());
         values.put(KEY_NR_PICTURES, u.numberofPhotosTaken.get());
         values.put(KEY_NR_friends, u.numberofFriends.get());
+        values.put(KEY_ABOUT, u.getAbout());
 
         // Inserting Row
         long id = db.insert(TABLE_USER, null, values);
@@ -113,7 +113,7 @@ public class SQLiteHandler extends SQLiteOpenHelper {
                     cursor.getString(2),(cursor.getString(3)).substring(AppConfig.URL_SERVER.length() -1),
                     cursor.getString(4), cursor.getString(5),
                     cursor.getString(6), cursor.getInt(7),
-                    cursor.getString(8),cursor.getString(12));
+                    cursor.getString(8),cursor.getString(12), cursor.getString(13));
                 user.numberofAppereances.set(cursor.getLong(10));
                 user.numberofPhotosTaken.set(cursor.getLong(9));
                 user.numberofFriends.set(cursor.getLong(11));
@@ -123,26 +123,30 @@ public class SQLiteHandler extends SQLiteOpenHelper {
         }
     }
 
-    public User getUserDetails(int id) {
-            String selectQuery = "SELECT  * FROM " + TABLE_USER +"WHERE "+KEY_ID +" = "+id;
 
-            SQLiteDatabase db = this.getReadableDatabase();
-            Cursor cursor = db.rawQuery(selectQuery, null);
-            // Move to first row
-            cursor.moveToFirst();
-            if (cursor.getCount() > 0) {
-                User user = new User(cursor.getInt(0), cursor.getString(1),
-                        cursor.getString(2),(cursor.getString(3)).substring(AppConfig.URL_SERVER.length() -1),
-                        cursor.getString(4), cursor.getString(5),
-                        cursor.getString(6), cursor.getInt(7),
-                        cursor.getString(8),cursor.getString(12));
-                user.numberofAppereances.set(cursor.getLong(10));
-                user.numberofPhotosTaken.set(cursor.getLong(9));
-                user.numberofFriends.set(cursor.getLong(11));
-                return user;
-            }else {
-                return null;
-            }
+    public void updateUsers(User u){
+            SQLiteDatabase db = this.getWritableDatabase();
+
+            ContentValues values = new ContentValues();
+            values.put(KEY_NAME, u.getName());
+            values.put(KEY_BIRTHDAY, u.getBirthday());
+            values.put(KEY_PROFILE_PIC, u.getProfileImage());
+            values.put(KEY_COUNTRY, u.getCountry());
+            values.put(KEY_POINTS, u.getnumberofPoints().get());
+            values.put(KEY_USE_REC, u.getUseRecognizer());
+            values.put(KEY_GENDER, u.getGender());
+            values.put(KEY_NR_foundIn, u.numberofAppereances.get());
+            values.put(KEY_NR_PICTURES, u.numberofPhotosTaken.get());
+            values.put(KEY_NR_friends, u.numberofFriends.get());
+            values.put(KEY_ABOUT, u.getAbout());
+            String where=KEY_ID+"=?";
+            String[] args = new String[] {String.valueOf(u.getId())};
+            db.update(TABLE_USER,values,where,args);
+            // Inserting Row
+            long id = db.insert(TABLE_USER, null, values);
+            db.close(); // Closing database connection
+
+            Log.d(TAG, "user updated into sqlite: " + id);
         }
 
     /**

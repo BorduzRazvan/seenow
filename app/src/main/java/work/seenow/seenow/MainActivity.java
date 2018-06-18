@@ -3,6 +3,7 @@ package work.seenow.seenow;
 import work.seenow.seenow.Fragments.*;
 import work.seenow.seenow.Utils.AppController;
 import work.seenow.seenow.Utils.CircleTransform;
+import work.seenow.seenow.Utils.FeedListAdapter;
 import work.seenow.seenow.Utils.SQLiteHandler;
 import work.seenow.seenow.Utils.SessionManager;
 import work.seenow.seenow.Utils.User;
@@ -38,32 +39,25 @@ import java.util.HashMap;
 
 
 public class MainActivity extends AppCompatActivity {
-    public static String PACKAGE_NAME;
-    private SQLiteHandler db;
-    private SessionManager session;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private NavigationView navigationView;
+    public static SQLiteHandler db;
+    private SessionManager session;
     private DrawerLayout drawer;
     private View navHeader;
     private ImageView imgNavHeaderBg, imgProfile;
-    private TextView txtName, txtWebsite;
+    private TextView txtName;
     private Toolbar toolbar;
     private FloatingActionButton fab;
     private int target_user;
 
-    // urls to load navigation header background image
-    // and profile image
-    private static String urlProfileImg;
-
     // index to identify current nav menu item
     public static int navItemIndex = 0;
 
-    // tags used to attach the fragments
     private static final String TAG_HOME = "home";
     private static final String TAG_SETTINGS = "settings";
     private static final String TAG_PROFILE = "profile";
-    private static final String TAG_LOGOUT = "logout";
     private static final String TAG_NEW_POST = "new_post";
 
     public static String CURRENT_TAG = TAG_HOME;
@@ -110,18 +104,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                CURRENT_TAG = TAG_PROFILE;
-                navItemIndex = 2;
-                target_user = Integer.parseInt(intent.getStringExtra("target_id"));
-                loadHomeFragment();
-            }
-
-
-        };
-
         // SqLite database handler
         db = new SQLiteHandler(getApplicationContext());
         user= db.getUserDetails();
@@ -133,9 +115,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG,"SUNT AICI");
             logoutUser();
         } else {
-            urlProfileImg = user.getProfileImage();
             Log.d(TAG, "UserName: "+user.getName()+"id: "+user.getId());
-            Log.d(TAG, "ProfilePic:"+urlProfileImg);
 
             Log.d(TAG, "is loggedin");
 
@@ -162,14 +142,15 @@ public class MainActivity extends AppCompatActivity {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                    Snackbar.make(view, "Feed Refresh", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
+                    FeedFragment.getFeeds();
                 }
             });
 
 
             // load nav menu header data
-            loadNavHeader();
+            loadNavHeader(user.getProfileImage());
 
             // initializing navigation menu
             setUpNavigationView();
@@ -180,18 +161,15 @@ public class MainActivity extends AppCompatActivity {
                 loadHomeFragment();
             }
 
-
-            PACKAGE_NAME = getApplicationContext().getPackageName();
         }
     }
-
 
     /***
      * Load navigation menu header information
      * like background image, profile image
-     * name, website, notifications action view (dot)
+     * name
      */
-    private void loadNavHeader() {
+    public void loadNavHeader(String userImage) {
         // name, website
         txtName.setText(user.getName());
 
@@ -199,17 +177,14 @@ public class MainActivity extends AppCompatActivity {
         imgNavHeaderBg.setImageResource(R.drawable.nav_menu_header_bg);
 
         // Loading profile image
-        Glide.with(this).load(urlProfileImg)
+        Glide.with(this).load(userImage)
                 .crossFade()
                 .thumbnail(0.5f)
                 .bitmapTransform(new CircleTransform(this))
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(imgProfile);
 
-        // showing dot next to notifications label
-        navigationView.getMenu().getItem(3).setActionView(R.layout.menu_dot);
     }
-
 
 
     /***
@@ -282,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
                 return profileFragment;
             case 3:
                 // settings
-                SettingsFragment settingsFragment = new SettingsFragment();
+                SettingsFragment settingsFragment = SettingsFragment.newInstance(user);
                 return settingsFragment;
             default:
                 return FeedFragment.newInstance(user);
@@ -394,16 +369,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-
-        // show menu only when home fragment is selected
-        if (navItemIndex == 0) {
-            getMenuInflater().inflate(R.menu.main, menu);
-        }
-
-        // when fragment is notifications, load the menu created for notifications
-        if (navItemIndex == 3) {
-            getMenuInflater().inflate(R.menu.notifications, menu);
-        }
         return true;
     }
 
@@ -415,21 +380,6 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_refresh) {
-            FeedFragment.getFeeds();
-        }
-
-        // user is in notifications fragment
-        // and selected 'Mark all as Read'
-        if (id == R.id.action_mark_all_read) {
-            Toast.makeText(getApplicationContext(), "All notifications marked as read!", Toast.LENGTH_LONG).show();
-        }
-
-        // user is in notifications fragment
-        // and selected 'Clear All'
-        if (id == R.id.action_clear_notifications) {
-            Toast.makeText(getApplicationContext(), "Clear all notifications!", Toast.LENGTH_LONG).show();
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -455,5 +405,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         AppController.getInstance().getRequestQueue().cancelAll("get_feed");
         finish();
+    }
+
+    public static void modifyUser(User u){
+        db.updateUsers(u);
     }
 }

@@ -1,6 +1,8 @@
 package work.seenow.seenow.Fragments;
 
 
+import android.media.Image;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.res.Resources;
@@ -15,12 +17,16 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,9 +36,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import work.seenow.seenow.MainActivity;
 import work.seenow.seenow.R;
 import work.seenow.seenow.Utils.AppConfig;
 import work.seenow.seenow.Utils.AppController;
+import work.seenow.seenow.Utils.CircleTransform;
 import work.seenow.seenow.Utils.FeedItem;
 import work.seenow.seenow.Utils.GridSpacingItemDecoration;
 import work.seenow.seenow.Utils.PostsAdapter;
@@ -85,7 +93,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         targetuser_id = (int)getArguments().getInt("userId");
         posts = new ArrayList<ProfileItem>();
         handlers = new MyClickHandlers(getContext());
-        getPosts(user.getId());
+        getPosts(targetuser_id);
         renderProfile();
         initRecyclerView();
         view = binding.getRoot();
@@ -137,6 +145,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
                         user.setBirthday(jSUser.getString("birthday"));
                         user.setCountry(jSUser.getString("country"));
                         user.setProfileImage(jSUser.getString("profilePicture"));
+                        user.setAbout(jSUser.getString("about"));
                         user.numberofFriends.set(jSUser.getLong("nr_friends"));
                         user.numberofAppereances.set(jSUser.getLong("nr_foundIn"));
                         user.numberofPhotosTaken.set(jSUser.getLong("nr_pictures"));
@@ -191,6 +200,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
                     {
                         ProfileItem item = new ProfileItem();
                         item.setImageUrl(AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                        item.setimageId(Integer.parseInt(feedObj.getString("pic_id")));
                         Log.d(TAG, "Am link:"+AppConfig.URL_SERVER+feedObj.getString("pic_name"));
                         posts.add(item);
                     }
@@ -199,6 +209,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
                 {
                     ProfileItem item = new ProfileItem();
                     item.setImageUrl(AppConfig.URL_SERVER+feedObj.getString("pic_name"));
+                    item.setimageId(Integer.parseInt(feedObj.getString("pic_id")));
                     Log.d(TAG, "Am link:"+AppConfig.URL_SERVER+feedObj.getString("pic_name"));
                     posts.add(item);
                 }
@@ -216,8 +227,79 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
 
     @Override
     public void onPostClicked(ProfileItem post) {
-        Toast.makeText(getActivity().getApplicationContext(), "Post clicked! " + post.getImageUrl(), Toast.LENGTH_SHORT).show();
+        if (user.getId() == targetuser_id) {
+            user.setProfileImage(post.getImageUrl().substring(AppConfig.URL_SERVER.length() - 1));
+            MainActivity.modifyUser(user);
+            modifyProfilePic(user.getId(), post.getImageId());
+
+
+            NavigationView navigationView = (NavigationView) getActivity().findViewById(R.id.nav_view);
+            View navHeader = navigationView.getHeaderView(0);
+            ImageView imgProfile = (ImageView) navHeader.findViewById(R.id.img_profile);
+            // Loading profile image
+            Glide.with(this).load(user.getProfileImage())
+                    .crossFade()
+                    .thumbnail(0.5f)
+                    .bitmapTransform(new CircleTransform(getActivity().getApplicationContext()))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(imgProfile);
+            Toast.makeText(getActivity().getApplicationContext(), "Profile picture updated!", Toast.LENGTH_SHORT).show();
+        }
     }
+
+
+    private void modifyProfilePic(final int user_id, final int pic_id){
+            StringRequest strReq = new StringRequest(Request.Method.POST,
+                    AppConfig.URL_ACTIONS, new Response.Listener<String>() {
+
+                @Override
+                public void onResponse(String response) {
+                    Log.d(TAG, "Login Response: " + response.toString());
+
+                    try {
+                        JSONObject jObj = new JSONObject(response);
+                        boolean error = jObj.getBoolean("error");
+
+//                     Check for error node in json
+                        if (!error) {
+                            Log.d(TAG,"Successful modified");
+
+                        } else {
+                            // Error in login. Get the error message
+                            String errorMsg = jObj.getString("error_msg");
+                        }
+                    } catch (JSONException e) {
+                        // JSON error
+                        e.printStackTrace();
+                    }
+
+                }
+            }, new Response.ErrorListener() {
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+                }
+            }) {
+
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("user_id",((Integer)user_id).toString());
+                    params.put("pic_id",((Integer)pic_id).toString());
+                    params.put("action_type", "setProfilePic");
+                    return params;
+                }
+
+            };
+
+
+            // Adding request to request queue
+            AppController.getInstance().addToRequestQueue(strReq, "get_feed");
+
+        }
+
 
     public class MyClickHandlers {
 
@@ -227,11 +309,6 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
             this.context = context;
         }
 
-        /**
-         * Demonstrating updating bind data
-         * Profile name, number of posts and profile image
-         * will be updated on Fab click
-         */
         public void onProfileFabClicked(View view) {
             user.setName(user.getName());
             Log.d(TAG,user.getProfileImage());
@@ -239,21 +316,21 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         }
 
         public boolean onProfileImageLongPressed(View view) {
-            Toast.makeText(getActivity().getApplicationContext(), "Profile image long pressed!", Toast.LENGTH_LONG).show();
+
             return false;
         }
 
 
         public void onFollowersClicked(View view) {
-            Toast.makeText(context, "Followers is clicked!", Toast.LENGTH_SHORT).show();
+
         }
 
         public void onFollowingClicked(View view) {
-            Toast.makeText(context, "Following is clicked!", Toast.LENGTH_SHORT).show();
+
         }
 
         public void onPostsClicked(View view) {
-            Toast.makeText(context, "Posts is clicked!", Toast.LENGTH_SHORT).show();
+
         }
     }
 

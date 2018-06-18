@@ -34,6 +34,15 @@
     <string name="Visibile">Visiblie</string>
     <string name="Invisible">Invisible</string>
 
+    <!--Strings for SettingsActivity-->
+    <string name="changeEmail">Change mail address</string>
+    <string name="changePassword">Change password</string>
+    <string name="changeUseRecognizer">Do you want to use the Person Recognizer? </string>
+    <string name="about">Write something about you</string>
+    <string name="new_email">Enter your new email adress</string>
+    <string name="ChangePassword_Inp">Enter your new password</string>
+    <string name="currentPassword">Enter your current password</string>
+    <string name="ConfChangePassword_Inp">Enter your new password</string>
 
     <!--Strings used for ProfileActivity-->
     <string name="PhotosTaken">Photos taken</string>

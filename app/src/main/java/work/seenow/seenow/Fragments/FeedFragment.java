@@ -26,12 +26,9 @@ import com.android.volley.Cache.Entry;
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 
 
-import work.seenow.seenow.LoginActivity;
 import work.seenow.seenow.MainActivity;
 import work.seenow.seenow.R;
 import work.seenow.seenow.Utils.AppConfig;

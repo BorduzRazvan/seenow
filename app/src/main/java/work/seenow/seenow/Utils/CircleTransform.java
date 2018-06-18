@@ -12,9 +12,7 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 
 import java.security.MessageDigest;
 
-/**
- * Created by Lincoln on 10/03/16.
- */
+
 public class CircleTransform extends BitmapTransformation {
     public CircleTransform(Context context) {
         super(context);
