@@ -52,11 +52,12 @@
 
                     <android.support.design.widget.FloatingActionButton
                         android:layout_width="wrap_content"
+                        android:id="@+id/fab_download"
                         android:layout_height="wrap_content"
                         android:layout_alignParentBottom="true"
                         android:layout_alignParentRight="true"
                         android:onClick="@{handlers::onProfileFabClicked}"
-                        android:src="@drawable/ic_add_white_24dp"
+                        android:src="@drawable/download_icon"
                         app:fabCustomSize="@dimen/fab_profile" />
 
                 </RelativeLayout>

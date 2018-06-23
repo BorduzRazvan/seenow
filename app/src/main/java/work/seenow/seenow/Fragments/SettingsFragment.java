@@ -43,7 +43,6 @@ public class SettingsFragment extends Fragment {
     private Button changeEmail, changePassword, submitChanges;
     private User user;
     private boolean isChangeEmail, isChangePassword;
-
     public SettingsFragment() {
         // Required empty public constructor
     }
@@ -99,19 +98,36 @@ public class SettingsFragment extends Fragment {
         changeEmail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isChangeEmail = true;
-                current_password_ET.setVisibility(View.VISIBLE);
-                new_email_ET.setVisibility(View.VISIBLE);
+                if (isChangeEmail) {
+                    if(!isChangePassword) {
+                        current_password_ET.setVisibility(View.INVISIBLE);
+                    }
+                    new_email_ET.setVisibility(View.INVISIBLE);
+                    isChangeEmail = false;
+                } else {
+                    isChangeEmail = true;
+                    current_password_ET.setVisibility(View.VISIBLE);
+                    new_email_ET.setVisibility(View.VISIBLE);
+                }
             }
         });
 
         changePassword.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isChangePassword = true;
-                current_password_ET.setVisibility(View.VISIBLE);
-                new_password_confirm_ET.setVisibility(View.VISIBLE);
-                new_password_ET.setVisibility(View.VISIBLE);
+                if(isChangePassword) {
+                    if (!isChangeEmail) {
+                        current_password_ET.setVisibility(View.INVISIBLE);
+                    }
+                    new_password_confirm_ET.setVisibility(View.INVISIBLE);
+                    new_password_ET.setVisibility(View.INVISIBLE);
+                    isChangePassword = false;
+                }else {
+                    current_password_ET.setVisibility(View.VISIBLE);
+                    new_password_confirm_ET.setVisibility(View.VISIBLE);
+                    new_password_ET.setVisibility(View.VISIBLE);
+                    isChangePassword = true;
+                }
             }
         });
 
@@ -204,6 +220,7 @@ public class SettingsFragment extends Fragment {
                         params.put("current_password",current_password);
                     }
                     params.put("new_password",new_pass);
+                    params.put("isChangePassword","yes");
                 }
 
                 params.put("about",about);

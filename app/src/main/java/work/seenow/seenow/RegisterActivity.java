@@ -240,7 +240,7 @@ public class RegisterActivity extends Activity {
      * @param email
      * @return boolean true for valid false for invalid
      */
-    private static boolean isEmailValid(String email) {
+    public static boolean isEmailValid(String email) {
         return VALID_EMAIL_ADDRESS_REGEX .matcher(email).matches();
     }
 

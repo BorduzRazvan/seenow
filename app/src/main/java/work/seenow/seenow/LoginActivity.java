@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
 import com.android.volley.Request.Method;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -42,19 +44,25 @@ public class LoginActivity extends Activity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private Button btnLogin;
     private Button btnLinkToRegister;
+    private Button btnForgotPassword;
+    private Button btnSubmit;
     private EditText inputEmail;
-    private EditText inputPassword;
+    private EditText inputPassword, inputPassword2, inputActivationCode;
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
     private CallbackManager callbackManager;
     private LoginButton mButtonLogin;
+
+    private int reset_password_state;
+
     private User user;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         mButtonLogin = (LoginButton) findViewById(R.id.login_button);
+        btnForgotPassword = (Button) findViewById(R.id.forgotPassword);
         mButtonLogin.setReadPermissions(Arrays.asList(
                 "public_profile", "email", "user_birthday","user_photos","user_location","user_gender"));
         callbackManager = CallbackManager.Factory.create();
@@ -110,8 +118,10 @@ public class LoginActivity extends Activity {
 
         inputEmail = (EditText) findViewById(R.id.loginEmail);
         inputPassword = (EditText) findViewById(R.id.loginPassword);
+        inputPassword2 = (EditText) findViewById(R.id.loginPassword2);
         btnLogin = (Button) findViewById(R.id.loginButton);
         btnLinkToRegister = (Button) findViewById(R.id.loginNoAccountButton);
+        inputActivationCode = (EditText) findViewById(R.id.activation_code);
 
         // Progress dialog
         pDialog = new ProgressDialog(this);
@@ -130,7 +140,48 @@ public class LoginActivity extends Activity {
             startActivity(intent);
             finish();
         }
+        btnSubmit = (Button) findViewById(R.id.submit);
+        btnForgotPassword.setOnClickListener(new View.OnClickListener(){
+                                                 @Override
+                                                 public void onClick(View v) {
+                                                     inputPassword.setVisibility(View.INVISIBLE);
+                                                     btnLogin.setVisibility(View.INVISIBLE);
+                                                     btnLinkToRegister.setVisibility(View.INVISIBLE);
+                                                     btnSubmit.setVisibility(View.VISIBLE);
+                                                 }
+                                             });
 
+        btnSubmit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                String email = inputEmail.getText().toString().trim();
+                String activation_code = inputActivationCode.getText().toString().trim();
+                String password1 = inputPassword.getText().toString().trim();
+                String password2 = inputPassword2.getText().toString().trim();
+                if (reset_password_state == 0) {
+                    if ((email.isEmpty()) || (!RegisterActivity.isEmailValid(email))) {
+                        // Prompt user to enter credentials
+                        Toast.makeText(getApplicationContext(),
+                                "Please enter the email email address!", Toast.LENGTH_LONG)
+                                .show();
+                    } else {
+                        setPassowrdResetCode(email);
+                    }
+                } else {
+                    if(email.isEmpty() || activation_code.isEmpty() || password1.isEmpty() || password2.isEmpty() || (!password1.equals(password2)) ||
+                            (!RegisterActivity.isEmailValid(email)) || (!RegisterActivity.isPasswordStrong(password1))){
+                        // Prompt user to enter credentials
+                        Toast.makeText(getApplicationContext(),
+                                "Please enter the email email address!", Toast.LENGTH_LONG)
+                                .show();
+                        Log.d(TAG, "Email: "+email+".Activation_Code:"+activation_code+".password1"+password1);
+                    }else {
+                        modify_password(email,password1,activation_code);
+                    }
+                }
+            }
+        });
         // Login button Click Event
         btnLogin.setOnClickListener(new View.OnClickListener() {
 
@@ -164,6 +215,129 @@ public class LoginActivity extends Activity {
         });
 
     }
+
+    private void modify_password(final String email, final String password, final String activation_code) {
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                   AppConfig.URL_ACTIONS, new Response.Listener<String>() {
+        @Override
+        public void onResponse(String response) {
+            Log.d(TAG, "Login Response: " + response.toString());
+            try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        Toast.makeText(getApplicationContext(),
+                                "Password is changed, please login", Toast.LENGTH_LONG)
+                                .show();
+                        reset_password_state = 0;
+                        inputPassword.setVisibility(View.VISIBLE);
+                        btnLogin.setVisibility(View.VISIBLE);
+                        btnLinkToRegister.setVisibility(View.VISIBLE);
+                        btnForgotPassword.setVisibility(View.VISIBLE);
+                        btnSubmit.setVisibility(View.INVISIBLE);
+                        inputActivationCode.setVisibility(View.INVISIBLE);
+                        inputPassword2.setVisibility(View.INVISIBLE);
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                        "There was an error updating your information", Toast.LENGTH_LONG)
+                        .show();
+                    }
+                } catch (JSONException e) {
+                        // JSON error
+                     e.printStackTrace();
+                     Toast.makeText(getApplicationContext(),
+                        "There was an error updating your information", Toast.LENGTH_LONG)
+                        .show();
+            }
+
+        }
+        }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+
+                    Toast.makeText(getApplicationContext(),
+                            "There was an error updating your information", Toast.LENGTH_LONG)
+                            .show();
+                }
+            }) {
+
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("action_type", "set_password");
+                    params.put("email", email);
+                    params.put("password", password);
+                    params.put("activation_code", activation_code);
+                    return params;
+                }
+            };
+            // Adding request to request queue
+
+        strReq.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            AppController.getInstance().addToRequestQueue(strReq, "get_feed");
+        }
+
+
+    private void setPassowrdResetCode(final String email){
+                StringRequest strReq = new StringRequest(Request.Method.POST,
+                        AppConfig.URL_ACTIONS, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d(TAG, "Login Response: " + response.toString());
+                        try {
+                            JSONObject jObj = new JSONObject(response);
+                            boolean error = jObj.getBoolean("error");
+                            if (!error) {
+                                reset_password_state = 1;
+                                inputPassword.setVisibility(View.VISIBLE);
+                                inputPassword2.setVisibility(View.VISIBLE);
+                                inputActivationCode.setVisibility(View.VISIBLE);
+                            } else {
+                                Toast.makeText(getApplicationContext(),
+                                        "There was an error updating your information", Toast.LENGTH_LONG)
+                                        .show();
+                            }
+
+                        } catch (JSONException e) {
+                            // JSON error
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(),
+                                    "There was an error updating your information", Toast.LENGTH_LONG)
+                                    .show();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(TAG, "Login Error: " + error.getMessage());
+
+                        Toast.makeText(getApplicationContext(),
+                                "There was an error updating your information", Toast.LENGTH_LONG)
+                                .show();
+                    }
+                }) {
+
+                    @Override
+                    protected Map<String, String> getParams() {
+                        // Posting parameters to login url
+                        Map<String, String> params = new HashMap<String, String>();
+                        params.put("action_type", "forgot_password");
+                        params.put("email", email);
+                        return params;
+                    }
+                };
+                // Adding request to request queue
+        strReq.setRetryPolicy(new DefaultRetryPolicy(30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                AppController.getInstance().addToRequestQueue(strReq, "reset_pwd");
+            }
 
 
     private void checkLogin_Social(){

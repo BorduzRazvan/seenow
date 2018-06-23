@@ -44,6 +44,18 @@
             tools:layout_editor_absoluteY="240dp" />
 
         <EditText
+            android:id="@+id/activation_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:ems="10"
+            android:hint="Enter the code"
+            android:inputType="text"
+            android:visibility="invisible"
+            tools:layout_editor_absoluteX="84dp"
+            tools:layout_editor_absoluteY="240dp" />
+
+        <EditText
             android:id="@+id/loginPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,6 +63,18 @@
             android:ems="10"
             android:hint="@string/LoginPasswordHint"
             android:inputType="textPassword"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="285dp" />
+
+        <EditText
+            android:id="@+id/loginPassword2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:ems="10"
+            android:hint="@string/RegisterPasswordHint"
+            android:inputType="textPassword"
+            android:visibility="invisible"
             tools:layout_editor_absoluteX="85dp"
             tools:layout_editor_absoluteY="285dp" />
 
@@ -77,6 +101,24 @@
             android:text="@string/LoginNoAccount"
             tools:layout_editor_absoluteX="85dp"
             tools:layout_editor_absoluteY="494dp" />
+
+        <Button
+            android:id="@+id/forgotPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:background="@android:color/transparent"
+            android:text="@string/forgotPassword"
+            tools:layout_editor_absoluteX="85dp"
+            tools:layout_editor_absoluteY="494dp" />
+
+        <Button
+            android:id="@+id/submit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight=".5"
+            android:text="Submit"
+            android:visibility="invisible" />
 
     </LinearLayout>
 

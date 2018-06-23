@@ -516,6 +516,7 @@ public class CameraFragment extends Fragment {
                     params.put("predicted",((Integer)predicted).toString());
                 }
                 params.put("filename",fileName);
+                Log.d(TAG,"incerc sa inserez:"+visibility+((Integer)user.getId()).toString() + user.getUseRecognizer() + description + ((Integer)predicted).toString());
                 return params;
             }
 

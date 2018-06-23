@@ -2,6 +2,7 @@ package work.seenow.seenow.Fragments;
 
 
 import android.media.Image;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.content.Context;
@@ -97,6 +98,14 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         renderProfile();
         initRecyclerView();
         view = binding.getRoot();
+        if(targetuser_id == user.getId()){
+            FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_download);
+            fab.setVisibility(View.VISIBLE);
+        }
+        else {
+            FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab_download);
+            fab.setVisibility(View.INVISIBLE);
+        }
         return view;
     }
 
@@ -300,6 +309,61 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
 
         }
 
+    private void getPictures(final int id){
+        {
+            StringRequest strReq = new StringRequest(Request.Method.POST,
+                    AppConfig.URL_DOWNLOAD, new Response.Listener<String>() {
+
+                @Override
+                public void onResponse(String response) {
+                    Log.d(TAG, "Login Response: " + response.toString());
+
+                    try {
+                        JSONObject jObj = new JSONObject(response);
+                        boolean error = jObj.getBoolean("error");
+
+//                     Check for error node in json
+                        if (!error) {
+                            Log.d(TAG,"Download Link requested");
+                            Toast.makeText(getActivity().getApplicationContext(), "Download Link send via mail", Toast.LENGTH_SHORT).show();
+
+                        } else {
+                            // Error in login. Get the error message
+                            String errorMsg = jObj.getString("error_msg");
+                            Toast.makeText(getActivity().getApplicationContext(), "You are not found or tagged in any image", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (JSONException e) {
+                        // JSON error
+                        e.printStackTrace();
+                    }
+
+                }
+            }, new Response.ErrorListener() {
+
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "Login Error: " + error.getMessage());
+                    Toast.makeText(getActivity().getApplicationContext(), "Something went wrong!", Toast.LENGTH_SHORT).show();
+                }
+            }) {
+
+                @Override
+                protected Map<String, String> getParams() {
+                    // Posting parameters to login url
+                    Map<String, String> params = new HashMap<String, String>();
+                    params.put("id",((Integer)id).toString());
+                    return params;
+                }
+
+            };
+
+
+            // Adding request to request queue
+            AppController.getInstance().addToRequestQueue(strReq, "get_feed");
+
+        }
+    }
+
 
     public class MyClickHandlers {
 
@@ -310,9 +374,7 @@ public class ProfileFragment extends Fragment implements PostsAdapter.PostsAdapt
         }
 
         public void onProfileFabClicked(View view) {
-            user.setName(user.getName());
-            Log.d(TAG,user.getProfileImage());
-            user.setProfileImage(user.getProfileImage());
+            getPictures(user.getId());
         }
 
         public boolean onProfileImageLongPressed(View view) {

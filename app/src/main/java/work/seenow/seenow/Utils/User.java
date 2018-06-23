@@ -73,7 +73,9 @@ public class User extends BaseObservable implements Serializable {
     @Bindable
     public String getAbout() { return this.about;}
 
-    public void setAbout(String about) { this.about = about; }
+    public void setAbout(String about) { this.about = about;
+        notifyPropertyChanged(BR.about);
+    }
 
     @Bindable
     public String getName() {
