@@ -34,6 +34,7 @@
     <string name="select_visibility">Please select the visibility status of the image( v- visible, i- invisible)</string>
     <string name="Visibile">Visiblie</string>
     <string name="Invisible">Invisible</string>
+    <string name="description_hint">Write the description of the image</string>
 
     <!--Strings for SettingsActivity-->
     <string name="changeEmail">Change mail address</string>
